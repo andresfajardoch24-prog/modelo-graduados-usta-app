@@ -1,0 +1,35 @@
+{
+  "_nota": "Textos en lenguaje sencillo para personas que no conocen el tema. Los objetivos son propuesta del equipo; el objetivo del modelo es cita textual (Modelo 2026, lámina 1). La frase «qué muestran los datos» de cada indicador la redacta el dashboard a partir de las cifras.",
+
+  "objetivos": {
+    "contexto": {
+      "titulo": "Objetivo del modelo institucional",
+      "texto": "Diseñar e implementar un sistema institucional de seguimiento y evaluación de la transformación de los graduados que integre diferentes fuentes, metodologías e indicadores para generar evidencia sobre sus trayectorias, resultados y contribuciones, y utilizarla en la innovación curricular y en el fortalecimiento del portafolio de servicios y proyectos dirigidos a los graduados.",
+      "fuente": "Modelo 2026, lámina 1"
+    },
+    "general": "Construir, con la información disponible, la base técnica del Modelo de Seguimiento y Evaluación de la Transformación de los Graduados de la USTA —qué es la transformación, qué se puede medir, con qué datos e indicadores, y un prototipo de índice—, como insumo para la fase de validación del modelo.",
+    "especificos": [
+      {"verbo": "Diagnosticar", "texto": "Diagnosticar la calidad, la cobertura y los límites de representatividad de las tres bases de graduados disponibles.", "evidencia": "Depuración documentada, diccionario de 352 variables y cruces entre bases", "pagina": "informacion"},
+      {"verbo": "Clasificar", "texto": "Clasificar los aspectos de la transformación según si se pueden medir y con qué nivel de evidencia.", "evidencia": "Matriz de 13 aspectos con niveles de evidencia A–D", "pagina": "que-medir"},
+      {"verbo": "Proponer", "texto": "Proponer un prototipo de índice de transformación y las recomendaciones para el piloto de la Fase 2.", "evidencia": "Índice de 4 componentes, límites y próximos pasos", "pagina": "indice-transformacion"}
+    ],
+    "origen": "Propuesta del equipo"
+  },
+
+  "lecturas": {
+    "SOC-01": {"pregunta": "¿El graduado vive hoy en un estrato más alto que cuando se graduó?", "ojo": "Subir de estrato toma años: compare las cohortes antes de sacar conclusiones."},
+    "SOC-02": {"pregunta": "¿Es el primero de su familia en tener un título universitario?", "ojo": "Las dos bases preguntan distinto por los padres; aun así coinciden en el orden de magnitud."},
+    "SOC-03": {"pregunta": "¿Gana hoy más que cuando era estudiante?", "ojo": "Es lo que responde el graduado, sin montos ni ajuste por inflación."},
+    "PRO-01": {"pregunta": "Quien no trabajaba antes de graduarse, ¿consiguió su primer empleo en tres meses o menos?", "ojo": "No dice si ese primer empleo era bueno: eso lo miden los indicadores de pertinencia y contrato."},
+    "PRO-02": {"pregunta": "Quien ya cambió de trabajo, ¿tiene hoy un empleo más relacionado con lo que estudió que el primero?", "ojo": "Mire la barra completa: cuántos mejoraron frente a cuántos empeoraron."},
+    "PRO-03": {"pregunta": "Quien ya cambió de trabajo, ¿pasó a tener un contrato indefinido, el más estable?", "ojo": "Compare los dos números: primer empleo frente a empleo actual."},
+    "PRO-04": {"pregunta": "¿Está trabajando hoy, como empleado o por su cuenta?", "ojo": "Es una foto del presente, no un cambio. Las dos bases son de poblaciones y fechas distintas."},
+    "PRO-05": {"pregunta": "¿Su primer empleo tuvo relación directa con la carrera que estudió?", "ojo": "Describe solo el primer empleo; el actual se mide con otra escala."},
+    "PER-01": {"pregunta": "¿Su vida mejoró en varios aspectos (vivienda, salud, bienes, ocio…) después de graduarse?", "ojo": "Describe mejoras, no prueba que las haya producido la universidad."},
+    "PER-02": {"pregunta": "¿Siente que su formación le ayudó en muchos ámbitos de su vida?", "ojo": "Es la opinión del graduado sobre su formación, no una medición objetiva."},
+    "ACA-01": {"pregunta": "¿Siguió estudiando y alcanzó un posgrado?", "ojo": "Las dos bases preguntan distinto, por eso dan cifras diferentes."},
+    "ACA-02": {"pregunta": "¿Participa en proyectos comunitarios o de investigación, en gremios, o ha recibido premios?", "ojo": "Es autodeclarado; se podría verificar con CvLAC y RUES."},
+    "REL-01": {"pregunta": "¿Le interesa volver a estudiar en la Santo Tomás?", "ojo": "Es intención, no matrícula: sirve para diseñar la oferta de formación continua y posgrado."},
+    "REL-02": {"pregunta": "¿Ha recomendado su carrera a otras personas?", "ojo": "Mide el vínculo con la universidad, no la transformación."}
+  }
+}

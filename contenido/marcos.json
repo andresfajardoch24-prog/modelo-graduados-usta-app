@@ -1,0 +1,97 @@
+{
+  "_nota": "Marco teórico y metodológico del proyecto. Las páginas son las del visor de PDF. Las fuentes marcadas 'vía guía' las cita la guía de trabajo del proyecto; el original no se ha abierto y debe verificarse antes de citarse.",
+
+  "advertencias": [
+    {"titulo": "Páginas", "texto": "Las páginas indicadas son las del visor de PDF, no necesariamente las impresas en el documento."},
+    {"titulo": "«Vía guía»", "texto": "Fuentes que cita la guía de trabajo del proyecto. Nadie ha abierto el original: hay que verificarlas antes de citarlas."},
+    {"titulo": "No citar todavía", "texto": "Mincer, Card, Spence, Mayne, Rosenbaum y Rubin, y OCDE/JRC (2008) no están en el corpus del proyecto: fueron agregadas por la IA. Solo se citan si se consigue el documento, se guarda en Zotero y se abre."}
+  ],
+
+  "teorico": [
+    {"n": "1", "titulo": "El seguimiento de graduados como campo de estudio",
+     "puntos": [
+       {"texto": "Los estudios de graduados indagan la trayectoria, la transición al empleo, la relación entre competencias y requisitos del trabajo y la posición profesional; además, piden a los graduados evaluar retrospectivamente las condiciones de sus estudios.", "fuente": "Schomburg, Manual para estudios de seguimiento de graduados, p. 14"},
+       {"texto": "Todo estudio de graduados sigue tres etapas: desarrollo del concepto y del instrumento, recolección y análisis. El diseño incluye seleccionar las cohortes y las estrategias para rastrear a los graduados.", "fuente": "Schomburg, pp. 14–15"}
+     ],
+     "aporte": "Respalda que el proyecto empiece por el seguimiento y use preguntas retrospectivas y cohortes."},
+    {"n": "2", "titulo": "Evaluación de impacto y sus límites",
+     "puntos": [
+       {"texto": "Contrafactual: «situación hipotética que representa lo que habría ocurrido con una población objetivo si no hubiera participado en una intervención». Su estimación es fundamental en la evaluación de impacto.", "fuente": "Handbook Metodologías, p. 13"},
+       {"texto": "Gertler et al. (2011) plantean el impacto como una pregunta de causa y efecto; la OCDE (2023) admite también enfoques no experimentales.", "fuente": "vía guía, diapositivas 44–47", "via_guia": true}
+     ],
+     "aporte": "Explica por qué medir impacto en sentido estricto exige un grupo de comparación que hoy no existe."},
+    {"n": "3", "titulo": "Transformación del graduado: el concepto central",
+     "puntos": [
+       {"texto": "Cambios y resultados observables en las trayectorias de vida de los graduados, en múltiples dimensiones (personal, profesional, social y académica), en relación con su formación y con el contexto.", "fuente": "Modelo 2026, lámina 3"},
+       {"texto": "Observación frente a causa: «el graduado aumentó sus ingresos» no es lo mismo que «la Universidad produjo el aumento».", "fuente": "Modelo 2026, lámina 3"},
+       {"texto": "El seguimiento observa y genera información; la evaluación interpreta y genera conocimiento.", "fuente": "Modelo 2026, lámina 3"},
+       {"texto": "En los resultados influyen factores externos: experiencia, economía, sector productivo, territorio, redes y familia, entre otros.", "fuente": "Modelo 2026, lámina 3"}
+     ],
+     "aporte": "Define qué se mide: cambios observables, sin afirmar que la Universidad los causó."},
+    {"n": "4", "titulo": "El perfil de egreso como referente",
+     "puntos": [
+       {"texto": "El marco de referencia del modelo está formado por el PEI, el perfil de egreso, el perfil ocupacional y el contexto.", "fuente": "Modelo 2026, lámina 5"},
+       {"texto": "La transformación se contrasta con lo que el perfil de egreso promete formar.", "fuente": "Modelo 2026, lámina 4; guía, diapositivas 53–54"}
+     ],
+     "aporte": "Da el punto de comparación interno: lo prometido frente a lo logrado."},
+    {"n": "5", "titulo": "Las dimensiones y sus conceptos operativos",
+     "puntos": [
+       {"texto": "Dimensiones: personal, profesional, social y académica. Conceptos que se usan dentro de ellas: empleabilidad, pertinencia, movilidad social (de estrato e intergeneracional), calidad de vida y contribución percibida de la formación.", "fuente": "Modelo 2026, lámina 2"},
+       {"texto": "Ejemplo de indicador del campo: «graduados con empleo pertinente dentro de los 6 meses posteriores al egreso / total de graduados × 100».", "fuente": "Handbook Fundamentos, p. 63"}
+     ],
+     "aporte": "Convierte el concepto en aspectos que se pueden medir."},
+    {"n": "6", "titulo": "Marco normativo",
+     "puntos": [
+       {"texto": "El Acuerdo 01 de 2025 del CESU distingue seguimiento (características 15 y 39) de impacto (características 16 y 40), y describe el impacto como aporte y reconocimiento en el medio.", "fuente": "vía guía, diapositivas 37–38 (el PDF del acuerdo está escaneado)", "via_guia": true}
+     ],
+     "aporte": "Es la exigencia de acreditación que el modelo ayuda a cumplir."},
+    {"n": "7", "titulo": "Antecedentes en la USTA",
+     "puntos": [
+       {"texto": "IMS 2019: 53,8 CSE + 42,3 ACL + 3,9 CLA; movilidad social; 304 encuestas.", "fuente": "Guía de trabajo"},
+       {"texto": "PENSER 2025: 1.129 encuestas a graduados de 2017-1 a 2024-1.", "fuente": "Artículo PENSER 2025, p. 1"},
+       {"texto": "Fórmula del IIE: 0,30 FD + 0,30 DCI + 0,20 MS + 0,20 PMCV. No fue replicable: la reconstrucción dio 67,5 % frente al 72 % reportado.", "fuente": "Informe final PENSER (Consultorio 2025-2), sección 1"}
+     ],
+     "aporte": "Muestra lo que ya se midió y por qué hace falta otro enfoque."}
+  ],
+
+  "vacio": "Los antecedentes miden percepción o resultados en un solo momento. Ninguno mide el cambio entre un antes y un después en varias dimensiones, con su nivel de evidencia: ese es el vacío que atiende el proyecto.",
+
+  "metodologico": {
+    "tipo": {
+      "texto": "Estudio cuantitativo, descriptivo-comparativo y no experimental, con información transversal y preguntas retrospectivas, y comparación entre cohortes (pseudo-panel). La construcción del índice es exploratoria.",
+      "mixto": "A futuro el diseño puede ser mixto: integrar métodos cuantitativos y cualitativos con la teoría del cambio, y triangular fuentes.",
+      "fuentes": ["Handbook Metodologías, p. 12", "Modelo 2026, lámina 3, citando a Parra y Arias (2016)"]
+    },
+    "bases": [
+      {"base": "PENSER 2025", "registros": "1.129", "cobertura": "4 sedes, cohortes 2017–2024"},
+      {"base": "Percepción 2022", "registros": "2.488", "cobertura": "5 sedes, sobre todo cohortes 2014–2021"},
+      {"base": "Formulario 2023–2026", "registros": "1.149", "cobertura": "Principalmente Bucaramanga"}
+    ],
+    "unidad": "El graduado.",
+    "muestreo": {"texto": "No probabilístico, por autoselección.", "fuente": "Handbook Metodologías, sección 3.3.2, p. 30"},
+    "exclusiones": ["Personas sin consentimiento", "Registros duplicados", "Filas con códigos de control", "La base Bucaramanga 2022, por estar contenida en la de Percepción"],
+    "fases": [
+      {"fase": "Diagnóstico y depuración", "detalle": "Calidad, cobertura y cruces entre bases.", "pregunta": 3},
+      {"fase": "Operacionalización", "detalle": "Matriz dimensión → aspecto → variable → indicador → nivel de evidencia (A hecho verificable, B cambio declarado, C percepción, D no disponible).", "pregunta": 2},
+      {"fase": "Indicadores de transformación", "detalle": "14 indicadores clasificados en cambio, nivel, contribución y portafolio.", "pregunta": 4},
+      {"fase": "Índice de transformación (prototipo)", "detalle": "4 componentes normalizados de 0 a 100, promedio con pesos iguales y análisis de sensibilidad a los pesos.", "pregunta": 4},
+      {"fase": "Validación", "detalle": "Replicar el análisis factorial del Consultorio, triangular con otras fuentes y contrastar con actores clave.", "pregunta": 4},
+      {"fase": "Uso de la evidencia", "detalle": "Fichas para la mejora curricular y para el portafolio de servicios.", "pregunta": 5}
+    ],
+    "tecnicas": [
+      {"tecnica": "Proporciones con intervalo de Wilson al 95 %", "para": "Todos los indicadores"},
+      {"tecnica": "Matrices de transición antes → después", "para": "Estrato, contrato y correspondencia empleo–formación"},
+      {"tecnica": "Comparación por sede y cohorte", "para": "Segmentación; no se interpretan grupos con menos de 30 casos"},
+      {"tecnica": "Análisis factorial", "para": "Validar las escalas de competencias"},
+      {"tecnica": "Índice formativo", "para": "Resumen de la transformación; el alfa de Cronbach es solo diagnóstico"},
+      {"tecnica": "Ponderación (raking)", "para": "Corregir la composición con los totales del SNIES (pendiente)"}
+    ],
+    "calidad": [
+      {"texto": "Reglas de limpieza y clasificación documentadas, con bitácora de decisiones."},
+      {"texto": "Procesamiento reproducible con el agente de perfilado."},
+      {"texto": "Triangulación: «estrategia metodológica que integra diversas fuentes, métodos o enfoques para contrastar y validar hallazgos».", "fuente": "Handbook Metodologías, p. 14"}
+    ],
+    "etica": ["Cumplimiento de la Ley 1581 de 2012", "Exclusión de quienes no dieron consentimiento", "Cruces entre bases con huellas cifradas", "Procesamiento local; resultados publicados solo de forma agregada"],
+    "limitaciones": ["La muestra no es representativa", "No hay datos de panel: solo 89 personas aparecen en dos bases", "Las preguntas retrospectivas tienen sesgo de recuerdo", "Las escalas no son iguales entre bases", "El Formulario está concentrado en Bucaramanga"]
+  }
+}

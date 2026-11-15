@@ -1,0 +1,209 @@
+{
+  "_nota": "Contenido conceptual curado por el equipo a partir de los documentos del proyecto. Cada afirmación tomada de un documento lleva su fuente; lo que es propuesta del equipo está marcado con origen 'Propuesta del equipo'. Mientras no exista el módulo de comprensión documental (RAG), este archivo se edita a mano y se versiona.",
+
+  "modelo": {
+    "nombre": "Modelo Institucional de Seguimiento y Evaluación de la Transformación de los Graduados",
+    "proposito": {
+      "texto": "Comprender las trayectorias y transformaciones de los graduados para generar conocimiento institucional útil para la toma de decisiones y el mejoramiento continuo.",
+      "fuente": "Modelo 2026, lámina 1"
+    },
+    "objetivo": {
+      "texto": "Diseñar e implementar un sistema institucional de seguimiento y evaluación de la transformación de los graduados que integre diferentes fuentes, metodologías e indicadores para generar evidencia sobre sus trayectorias, resultados y contribuciones, y utilizarla en la innovación curricular y en el fortalecimiento del portafolio de servicios y proyectos dirigidos a los graduados.",
+      "fuente": "Modelo 2026, lámina 1"
+    },
+    "preguntas": [
+      {"n": 1, "pregunta": "¿Qué entendemos por transformación del graduado?", "tareas": ["Definir conceptualmente el fenómeno", "Identificar sus alcances, componentes y particularidades", "Precisar su relación con la formación universitaria y el contexto", "Diferenciarla de conceptos relacionados (seguimiento, impacto, empleabilidad, éxito profesional)"], "seccion": "transformacion"},
+      {"n": 2, "pregunta": "¿Qué aspectos de esa transformación podemos observar y medir?", "tareas": ["Definir las dimensiones de la transformación", "Establecer variables e indicadores", "Determinar qué es posible medir y qué no, y con qué nivel de evidencia", "Asegurar la coherencia con el perfil de egreso y los objetivos institucionales", "Incorporar una visión multidimensional (personal, laboral, social, académica)"], "seccion": "aspectos"},
+      {"n": 3, "pregunta": "¿Con qué información podemos hacerlo?", "tareas": ["Fuentes institucionales", "Información de graduados", "Información de empleadores", "Fuentes externas (DANE, Observatorio Laboral, SECOP, RUES, CvLAC)", "Triangulación de fuentes y métodos"], "seccion": "informacion"},
+      {"n": 4, "pregunta": "¿Cómo podemos medirlo?", "tareas": ["Definir indicadores e índices (cuando aplique)", "Establecer escalas de medición", "Definir métodos de agregación", "Realizar análisis longitudinal de las trayectorias", "Efectuar análisis comparativo entre cohortes, programas y sedes", "Segmentar por cohortes, programas, sedes, género y territorios"], "seccion": "medicion"},
+      {"n": 5, "pregunta": "¿Cómo utilizaremos la evidencia?", "tareas": ["Generar evidencia para la toma de decisiones", "Orientar la innovación y el mejoramiento curricular", "Fortalecer el portafolio de servicios y proyectos para los graduados", "Retroalimentar autoevaluación, acreditación y planeación", "Comunicar los resultados a la comunidad universitaria"], "seccion": "usos"}
+    ],
+    "preguntas_fuente": "Modelo 2026, lámina 2",
+    "fases": [
+      {"fase": "0 · Fase preliminar", "periodo": "ago-2025 – oct-2025", "producto": "Proyecto formulado y aprobado"},
+      {"fase": "1 · Conceptualización, comprensión y diseño", "periodo": "nov-2025 – oct-2026", "producto": "Modelo conceptual y metodológico diseñado"},
+      {"fase": "2 · Validación en contexto", "periodo": "nov-2026 – abr-2027", "producto": "Modelo validado y ajustado (piloto)"},
+      {"fase": "3 · Implementación, evaluación y estandarización", "periodo": "may-2027 – abr-2028", "producto": "Modelo implementado, evaluado y estandarizado"}
+    ],
+    "fases_fuente": "Modelo 2026, lámina 6",
+    "rol_equipo_tecnico": {
+      "actor": "Equipo técnico: Observatorio de Estadística, Sede Principal Bogotá (docente y estudiantes en práctica)",
+      "roles": ["Validar técnicamente indicadores y metodología", "Aplicar pruebas piloto y análisis", "Verificar disponibilidad y calidad de fuentes", "Documentar ajustes metodológicos y criterios de medición"],
+      "fuente": "Modelo 2026, lámina 7"
+    }
+  },
+
+  "transformacion": {
+    "definicion_modelo": {
+      "texto": "Cambios y resultados observables en las trayectorias de vida de los graduados, en múltiples dimensiones (personal, profesional, social y académica), en relación con su formación y con el contexto.",
+      "fuente": "Modelo 2026, lámina 3"
+    },
+    "impacto_modelo": {
+      "texto": "Huella o efecto producido en el entorno. Su atribución causal a la Universidad es metodológicamente más exigente, pues depende de múltiples factores externos e indirectos.",
+      "fuente": "Modelo 2026, lámina 3"
+    },
+    "ejemplo_modelo": {
+      "observacion": "El graduado aumentó sus ingresos después de graduarse",
+      "causal": "La Universidad produjo el aumento de ingresos del graduado",
+      "lectura": "La primera es una observación; la segunda, una afirmación causal. El modelo trabaja con la primera.",
+      "fuente": "Modelo 2026, lámina 3"
+    },
+    "factores_externos": {
+      "lista": ["Experiencia laboral", "Condiciones económicas", "Sector productivo", "Contexto territorial", "Edad", "Formación posterior", "Redes", "Situación familiar", "Políticas públicas", "Características individuales"],
+      "fuente": "Modelo 2026, lámina 3"
+    },
+    "seguimiento_vs_evaluacion": [
+      {"concepto": "Seguimiento", "funcion": "Observa y genera información", "pregunta": "¿Qué está ocurriendo con nuestros graduados a lo largo del tiempo?", "caracter": "Función permanente de observación y generación de información"},
+      {"concepto": "Evaluación", "funcion": "Interpreta y genera conocimiento", "pregunta": "¿Qué significa lo que estamos observando y qué podemos aprender de ello?", "caracter": "Función de análisis e interpretación para orientar decisiones"}
+    ],
+    "seguimiento_fuente": "Modelo 2026, lámina 3",
+    "definicion_operativa": {
+      "origen": "Propuesta del equipo",
+      "texto": "Para efectos de medición, la transformación del graduado es la diferencia observable entre un punto de referencia —su situación al ingresar, al graduarse o en su primer empleo— y su situación actual, en las dimensiones personal, profesional, social y académica, leída en relación con lo que promete el perfil de egreso y con el contexto, sin afirmar que la Universidad la causó.",
+      "criterios": [
+        "Requiere dos momentos: un antes medido o declarado y un después. Una foto del presente es seguimiento, no transformación.",
+        "Es multidimensional: ninguna dimensión sola representa la transformación.",
+        "Se contrasta con el perfil de egreso, que es el referente de lo que la formación debía producir.",
+        "Se lee siempre segmentada (cohorte, programa, sede, género, territorio), porque los factores externos cambian entre grupos.",
+        "Se reporta con su nivel de evidencia: no es lo mismo un hecho verificable que un cambio declarado o una percepción."
+      ]
+    },
+    "diferencias": [
+      {"concepto": "Seguimiento", "que_es": "Saber dónde están y qué hacen los graduados.", "pregunta": "¿Qué está pasando?"},
+      {"concepto": "Empleabilidad", "que_es": "Capacidad de conseguir y mantener empleo. Es una parte de la dimensión profesional.", "pregunta": "¿Trabaja y en qué condiciones?"},
+      {"concepto": "Éxito profesional", "que_es": "Logro en la carrera (cargo, ingreso, reconocimiento). Mira el resultado, no el cambio.", "pregunta": "¿Le va bien?"},
+      {"concepto": "Transformación", "que_es": "Cambio observable entre un antes y un después, en varias dimensiones, en relación con la formación.", "pregunta": "¿Qué cambió y cómo se relaciona con su formación?"},
+      {"concepto": "Impacto", "que_es": "Parte del cambio atribuible causalmente a la formación. Exige comparación con un contrafactual.", "pregunta": "¿Qué parte se debe a la Universidad?"}
+    ]
+  },
+
+  "niveles_evidencia": [
+    {"nivel": "A", "nombre": "Hecho verificable", "descripcion": "Dato que puede contrastarse con un registro externo (contrato, título, empresa creada, producción científica).", "ejemplo": "Título de posgrado; empresa en RUES"},
+    {"nivel": "B", "nombre": "Cambio declarado", "descripcion": "La persona reporta su situación en dos momentos o declara un cambio. Medible, pero sujeto a sesgo de recuerdo.", "ejemplo": "Estrato al graduarse y estrato actual"},
+    {"nivel": "C", "nombre": "Percepción o contribución", "descripcion": "Valoración subjetiva del aporte de la formación. Útil para el currículo, no para afirmar cambios.", "ejemplo": "Incidencia de la formación en sus ingresos"},
+    {"nivel": "D", "nombre": "No disponible", "descripcion": "El aspecto es relevante para el modelo pero no existe información en las bases actuales.", "ejemplo": "Trayectoria de la misma persona en el tiempo (panel)"}
+  ],
+
+  "aspectos": {
+    "fuente": "Aspectos que el seguimiento permite observar: Modelo 2026, lámina 3. Clasificación de medibilidad: Propuesta del equipo con base en el diagnóstico de datos.",
+    "lista": [
+      {"aspecto": "Trayectoria laboral", "dimension": "Profesional", "medible": "Sí", "evidencia": "B", "base": "Percepción", "como": "Primer empleo frente a empleo actual: contrato y correspondencia con la formación.", "indicadores": ["PRO-02", "PRO-03"]},
+      {"aspecto": "Empleabilidad", "dimension": "Profesional", "medible": "Sí", "evidencia": "B", "base": "Percepción, PENSER, Formulario", "como": "Tiempo hasta el primer empleo y situación laboral actual.", "indicadores": ["PRO-01", "PRO-04"]},
+      {"aspecto": "Relación formación–ocupación", "dimension": "Profesional", "medible": "Sí", "evidencia": "C", "base": "Percepción, Formulario", "como": "Relación del primer empleo con el título y correspondencia de funciones con las competencias.", "indicadores": ["PRO-05", "PRO-02"]},
+      {"aspecto": "Desarrollo profesional", "dimension": "Profesional", "medible": "Parcial", "evidencia": "B", "base": "Percepción", "como": "Nivel del cargo en el primer empleo y en el actual: está en texto libre (120 y 99 variantes) y requiere recodificación.", "indicadores": []},
+      {"aspecto": "Formación posterior", "dimension": "Académica", "medible": "Sí", "evidencia": "A", "base": "PENSER, Percepción", "como": "Máximo nivel de estudios y títulos adicionales.", "indicadores": ["ACA-01"]},
+      {"aspecto": "Movilidad", "dimension": "Social", "medible": "Sí", "evidencia": "B", "base": "Percepción, PENSER", "como": "Estrato al graduarse frente al actual; escolaridad de los padres frente a la propia; ingreso frente al último año de estudio.", "indicadores": ["SOC-01", "SOC-02", "SOC-03"]},
+      {"aspecto": "Participación social", "dimension": "Social", "medible": "Sí", "evidencia": "B", "base": "PENSER", "como": "Proyectos comunitarios y de investigación, gremios y distinciones. Verificable con CvLAC y RUES.", "indicadores": ["ACA-02"]},
+      {"aspecto": "Relación con la Universidad", "dimension": "Relación con la Universidad", "medible": "Sí", "evidencia": "C", "base": "Percepción, Formulario", "como": "Recomendación del programa e interés en formación continua y posgrado.", "indicadores": ["REL-01", "REL-02"]},
+      {"aspecto": "Bienestar y calidad de vida", "dimension": "Personal", "medible": "Sí", "evidencia": "B", "base": "Percepción, PENSER", "como": "Mejoras declaradas después del título e incidencia percibida de la formación.", "indicadores": ["PER-01", "PER-02"]},
+      {"aspecto": "Competencias desarrolladas", "dimension": "Personal", "medible": "Sí", "evidencia": "C", "base": "PENSER, Percepción", "como": "Escalas de competencias transversales y disciplinares (validadas con análisis factorial por el Consultorio 2025-2).", "indicadores": []},
+      {"aspecto": "Brechas de pertinencia y competencias emergentes", "dimension": "Académica", "medible": "Parcial", "evidencia": "C", "base": "Percepción", "como": "Respuestas abiertas sobre qué debería enseñar el programa: requieren análisis de texto.", "indicadores": []},
+      {"aspecto": "Cambios en diferentes momentos posteriores a la graduación", "dimension": "Transversal", "medible": "Parcial", "evidencia": "B", "base": "Percepción, PENSER", "como": "Comparación entre cohortes (pseudo-panel). No hay panel real: solo 89 personas aparecen en dos bases.", "indicadores": []},
+      {"aspecto": "Valoración de los empleadores", "dimension": "Profesional", "medible": "No", "evidencia": "D", "base": "—", "como": "No hay base de empleadores en la carpeta. El IMS 2019 y el estudio de Santander tienen instrumentos reutilizables.", "indicadores": []}
+    ]
+  },
+
+  "indice": {
+    "origen": "Propuesta del equipo",
+    "por_que_una_base": "Un índice individual exige que todos sus componentes se midan en la misma persona. Las tres bases no se pueden unir a nivel individual (solo 89 personas coinciden entre PENSER y el Formulario), así que el prototipo se calcula dentro de la base de Percepción, la única con preguntas de antes y después en las cuatro dimensiones.",
+    "componentes": [
+      {"dimension": "Social", "regla": "Estrato actual frente al estrato al graduarse: bajó = 0, igual = 50, subió = 100."},
+      {"dimension": "Profesional", "regla": "Promedio de tres puntajes 0–100: correspondencia empleo–formación (empleo actual o, si sigue en el primero, el primero), relación del primer empleo con el título (directa 100, indirecta 50, ninguna 0) y rapidez de inserción (≤ 1 mes o ya vinculado 100 … > 1 año 0)."},
+      {"dimension": "Personal", "regla": "Porcentaje de las 6 mejoras de bienestar declaradas después del título."},
+      {"dimension": "Académica", "regla": "Máximo nivel alcanzado: pregrado 0, especialización 50, maestría 75, doctorado 100."}
+    ],
+    "agregacion": "Promedio simple de los cuatro componentes (pesos iguales), solo para personas con los cuatro completos.",
+    "lectura_alfa": "El índice es formativo: sus componentes miden cosas distintas que juntas definen la transformación, así que no se espera que se correlacionen mucho entre sí. Un alfa de Cronbach bajo no lo invalida; lo que hay que validar es la elección de componentes y la sensibilidad a los pesos.",
+    "pendiente": ["Validar componentes y escalas con el director del proyecto y la experta pedagógica", "Comparar pesos iguales con pesos por expertos y por análisis factorial", "Análisis de sensibilidad del orden entre sedes y cohortes", "Ponderar con totales de graduados (SNIES o Dirección de Graduados) antes de comparar sedes"]
+  },
+
+  "usos": {
+    "fuente": "Modelo 2026, lámina 4",
+    "curricular": {
+      "titulo": "Innovación y mejoramiento curricular",
+      "que_permite": ["Brechas de pertinencia entre la formación y las necesidades del entorno", "Competencias emergentes requeridas por el contexto", "Nuevas necesidades del entorno para actualizar los programas", "Fortalezas de la formación", "Aspectos susceptibles de actualización curricular"],
+      "evidencia_disponible": [
+        {"insumo": "Correspondencia empleo–formación y relación del primer empleo con el título", "indicadores": ["PRO-02", "PRO-05"]},
+        {"insumo": "Competencias con menor desarrollo percibido (p. ej. segunda lengua, inserción en el mercado laboral)", "indicadores": []},
+        {"insumo": "Respuestas abiertas: asignaturas que aportaron, que no aportaron y qué debería enseñar el programa (más de 1.700 respuestas)", "indicadores": []}
+      ]
+    },
+    "portafolio": {
+      "titulo": "Fortalecimiento del portafolio institucional para los graduados",
+      "ambitos": ["Formación continua", "Empleabilidad", "Emprendimiento", "Relacionamiento y redes", "Bienestar", "Acompañamiento", "Servicios y programas especializados", "Oportunidades de desarrollo profesional y personal"],
+      "evidencia_disponible": [
+        {"insumo": "Interés en formación continua y en posgrado, con tipo de programa y temas", "indicadores": ["REL-01"]},
+        {"insumo": "Graduados en búsqueda de empleo y medios que usan para buscarlo", "indicadores": ["PRO-04"]},
+        {"insumo": "Recomendación del programa y contacto con la red de compañeros", "indicadores": ["REL-02"]}
+      ]
+    }
+  },
+
+  "limitaciones": [
+    {"titulo": "Ninguna base es representativa", "texto": "Las tres encuestas son de respuesta voluntaria. Los porcentajes describen a quienes respondieron. Los intervalos de confianza muestran solo la incertidumbre de tamaño de muestra, no el sesgo de autoselección."},
+    {"titulo": "Sin panel longitudinal", "texto": "Solo 89 personas aparecen en PENSER y en el Formulario. La transformación se mide con preguntas retrospectivas dentro de la misma encuesta y con comparación entre cohortes."},
+    {"titulo": "Cohortes no equivalentes", "texto": "Las cohortes antiguas tienen más tiempo para transformarse, pero también pueden ser las que mejor les fue (quienes siguen en contacto con la Universidad responden más)."},
+    {"titulo": "Escalas distintas entre bases", "texto": "Las bases miden conceptos parecidos con escalas diferentes (p. ej. «Muy alto» en PENSER frente a «Pleno (5)» en Percepción). No se promedian entre bases sin homologación documentada."},
+    {"titulo": "Concentración territorial", "texto": "El Formulario de actualización es casi todo de Bucaramanga. Sus resultados no describen a la Universidad completa."}
+  ],
+
+  "proximos_pasos": [
+    {"paso": "Solicitar los totales de graduados por sede, programa y año (SNIES o Dirección de Graduados)", "para": "Medir el sesgo de cada base y ponderar"},
+    {"paso": "Validar la definición operativa y la matriz de aspectos con el director del proyecto", "para": "Cerrar la pregunta 1 y 2 del modelo"},
+    {"paso": "Recodificar el nivel del cargo (primer empleo y actual)", "para": "Medir desarrollo profesional"},
+    {"paso": "Analizar las respuestas abiertas con un libro de códigos validado", "para": "Evidencia curricular"},
+    {"paso": "Confirmar la estructura factorial de PENSER en la base de Percepción", "para": "Validar escalas de competencias"},
+    {"paso": "Diseñar el instrumento mínimo común y un identificador estable para el piloto de la Fase 2", "para": "Hacer posible el seguimiento longitudinal"}
+  ],
+
+  "glosario": [
+    {"termino": "Transformación del graduado", "definicion": "Cambios observables en las trayectorias de vida del graduado, en varias dimensiones, en relación con su formación y con el contexto.", "simple": "lo que cambió en su vida desde que estudió"},
+    {"termino": "Seguimiento", "definicion": "Función permanente de observar y generar información sobre los graduados a lo largo del tiempo.", "simple": "saber qué está pasando con ellos"},
+    {"termino": "Evaluación", "definicion": "Función de interpretar la información del seguimiento para generar conocimiento y orientar decisiones.", "simple": "entender qué significa lo que vemos"},
+    {"termino": "Impacto", "definicion": "Efecto atribuible causalmente a una intervención. Exige comparar con lo que habría pasado sin ella.", "simple": "lo que se debe realmente a la Universidad"},
+    {"termino": "Trayectoria", "definicion": "Secuencia de situaciones de una persona en el tiempo (empleos, estudios, condiciones de vida).", "simple": "el recorrido después del grado"},
+    {"termino": "Perfil de egreso", "definicion": "Conocimientos, habilidades y actitudes que la institución declara que tendrá su graduado. Es el referente para contrastar la transformación.", "simple": "lo que la Universidad promete formar"},
+    {"termino": "Perfil ocupacional", "definicion": "Funciones y campos de trabajo en los que se espera que se desempeñe el graduado.", "simple": "dónde y en qué debería poder trabajar"},
+    {"termino": "Pertinencia", "definicion": "Grado de correspondencia entre la formación y las necesidades del entorno laboral, social y territorial.", "simple": "si lo que se enseña sirve afuera"},
+    {"termino": "Empleabilidad", "definicion": "Capacidad de conseguir, mantener y mejorar un empleo.", "simple": "si consigue trabajo y lo conserva"},
+    {"termino": "Portafolio de servicios", "definicion": "Oferta institucional para los graduados: formación continua, empleabilidad, emprendimiento, redes, bienestar.", "simple": "lo que la Universidad les ofrece después del grado"},
+    {"termino": "Cohorte", "definicion": "Grupo de graduados que se graduó en el mismo periodo.", "simple": "la promoción"},
+    {"termino": "Pseudo-panel", "definicion": "Comparación entre cohortes distintas como aproximación al paso del tiempo, cuando no se sigue a las mismas personas.", "simple": "comparar promociones en vez de seguir a la misma persona"},
+    {"termino": "Panel longitudinal", "definicion": "Datos de las mismas personas medidas en varios momentos.", "simple": "encuestar a la misma persona varias veces"},
+    {"termino": "Pregunta retrospectiva", "definicion": "Pregunta que pide recordar una situación pasada (p. ej. el estrato al graduarse).", "simple": "preguntar cómo estaba antes"},
+    {"termino": "Sesgo de recuerdo", "definicion": "Error que aparece cuando las personas recuerdan mal o reinterpretan su situación pasada.", "simple": "no siempre recordamos bien"},
+    {"termino": "Autoselección", "definicion": "Cuando quienes responden una encuesta voluntaria difieren sistemáticamente de quienes no responden.", "simple": "responde quien quiere, y no es igual a todos"},
+    {"termino": "Representatividad", "definicion": "Grado en que una muestra refleja la composición de la población que quiere describir.", "simple": "si los que respondieron se parecen a todos los graduados"},
+    {"termino": "Ponderación (raking)", "definicion": "Ajuste de pesos para que la composición de la muestra coincida con totales conocidos de la población (sede, programa, año).", "simple": "darle más peso a los grupos que respondieron poco"},
+    {"termino": "Intervalo de Wilson", "definicion": "Intervalo de confianza para una proporción que se comporta bien con muestras pequeñas o porcentajes extremos.", "simple": "el rango probable del porcentaje"},
+    {"termino": "Matriz de transición", "definicion": "Tabla que cruza la situación inicial (filas) con la final (columnas) y muestra cuántos se movieron de una categoría a otra.", "simple": "de dónde venían y a dónde llegaron"},
+    {"termino": "Primera generación universitaria", "definicion": "Graduado cuyos padres no tienen título universitario.", "simple": "el primero de su casa en graduarse de la universidad"},
+    {"termino": "Movilidad intergeneracional", "definicion": "Cambio de posición (educativa o socioeconómica) de una persona respecto a la de sus padres.", "simple": "llegar más lejos que los padres"},
+    {"termino": "Índice compuesto", "definicion": "Número que resume varios indicadores en uno solo mediante una regla de agregación.", "simple": "un puntaje que junta varias cosas"},
+    {"termino": "Índice formativo", "definicion": "Índice cuyos componentes definen el concepto y pueden ser independientes entre sí (contrario a uno reflectivo, donde todos reflejan lo mismo).", "simple": "las partes suman, no tienen que parecerse"},
+    {"termino": "Alfa de Cronbach", "definicion": "Medida de consistencia interna entre ítems. Útil para escalas reflectivas; poco informativa para índices formativos.", "simple": "si las preguntas van en la misma dirección"},
+    {"termino": "Análisis factorial", "definicion": "Técnica que identifica grupos de preguntas que miden un mismo concepto latente.", "simple": "descubrir qué preguntas miden lo mismo"},
+    {"termino": "Triangulación", "definicion": "Contrastar un hallazgo con distintas fuentes o métodos (graduados, empleadores, registros).", "simple": "confirmar con varias fuentes"},
+    {"termino": "Nivel de evidencia", "definicion": "Clasificación de qué tan sólido es un dato: hecho verificable, cambio declarado, percepción o no disponible.", "simple": "qué tan seguro es lo que decimos"},
+    {"termino": "Procedencia", "definicion": "Registro de quién entregó un documento o dato, cuándo y con qué permiso de uso.", "simple": "de dónde salió cada archivo"},
+    {"termino": "Trazabilidad", "definicion": "Posibilidad de llevar cada afirmación a su documento y ubicación exacta.", "simple": "poder mostrar de dónde sale cada frase"},
+    {"termino": "RAG", "definicion": "Recuperación aumentada por generación: el modelo de IA responde a partir de fragmentos recuperados de los documentos propios y cita su origen.", "simple": "una IA que responde leyendo nuestros documentos"},
+    {"termino": "OCR", "definicion": "Reconocimiento óptico de caracteres: convierte un documento escaneado en texto.", "simple": "pasar una imagen a texto"},
+    {"termino": "Ley 1581 de 2012", "definicion": "Ley colombiana de protección de datos personales.", "simple": "la ley que protege los datos de las personas"},
+    {"termino": "SNIES", "definicion": "Sistema Nacional de Información de la Educación Superior; publica, entre otros, el número de graduados por institución y programa.", "simple": "el registro oficial de graduados"},
+    {"termino": "CESU", "definicion": "Consejo Nacional de Educación Superior; su Acuerdo 01 de 2025 fija las características de calidad sobre seguimiento e impacto de graduados.", "simple": "quien pone las reglas de acreditación"}
+  ],
+
+  "agente": {
+    "descripcion": "El dashboard se genera con un agente de perfilado: un programa en Python que lee las bases, aplica reglas documentadas y produce todas las tablas y cifras de esta página sin intervención manual.",
+    "pasos": [
+      {"paso": "Carga", "detalle": "Lee las tres bases desde DATAS GRADUADOS; la base de Bucaramanga 2022 solo se usa para verificar que está duplicada."},
+      {"paso": "Limpieza documentada", "detalle": "Excluye filas sin consentimiento, filas con códigos de digitación y duplicados, y registra cuántas filas salen en cada paso."},
+      {"paso": "Clasificación", "detalle": "Asigna cada variable a una dimensión, un momento (antes, actual, cambio, contribución) y un uso con reglas explícitas. Las columnas con datos personales se marcan como excluidas y nunca se exportan."},
+      {"paso": "Calidad y cruces", "detalle": "Calcula faltantes, composición por sede, cohorte y sexo, y cruza bases con huellas cifradas (solo conteos)."},
+      {"paso": "Indicadores", "detalle": "Calcula 14 indicadores con intervalo de Wilson y su desglose por sede y cohorte, y un prototipo de índice."},
+      {"paso": "Salidas", "detalle": "Escribe CSV y JSON, genera la bóveda de Obsidian y construye este dashboard."}
+    ],
+    "privacidad": "El agente corre en el equipo local. Las bases no salen de la máquina; el dashboard solo contiene agregados (conteos y porcentajes), nunca registros individuales."
+  }
+}

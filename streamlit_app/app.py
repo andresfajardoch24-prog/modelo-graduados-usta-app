@@ -1,0 +1,897 @@
+"""Documento técnico del Modelo de Seguimiento y Evaluación de la Transformación
+de los Graduados (USTA), organizado por las fases del modelo (lámina 6).
+
+Se ejecuta en local:  streamlit run app.py  (desde esta carpeta).
+Solo lee salidas agregadas del agente de perfilado; nunca abre las bases con
+datos personales, así que puede correr sin acceso a DATAS GRADUADOS.
+"""
+import html
+import json
+import sys
+from pathlib import Path
+
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
+
+RAIZ = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(RAIZ))
+from agente import fichas as F  # noqa: E402
+
+RESULTADOS = F.config.CARPETA_ENTREGABLES
+DOCX_FICHAS = RESULTADOS / "Fichas_Tecnicas_Indicadores.docx"
+DOCX_IMPACTO = RESULTADOS / "Impacto_vs_Transformacion_del_Graduado.docx"
+
+NAVY, NAVY2, GOLD, SERIES, GRIS = "#0A2557", "#123C7C", "#F2B705", "#1F5FBF", "#B8C2D3"
+NOMBRE_CORTO = {"penser": "PENSER 2025", "percepcion": "Percepción 2022", "formulario": "Formulario 2023–26"}
+ORDEN_COH = ["Hasta 2010", "2011–2015", "2016–2018", "2019–2021", "2022–2024", "2022"]
+DIMENSIONES = {
+    "Social": {"icono": "🤝", "que": "Cambios en la posición social y económica: estrato, ingresos, "
+               "llegar más lejos que los padres y participar en la comunidad."},
+    "Profesional": {"icono": "💼", "que": "Cómo entra y avanza en el trabajo: rapidez para emplearse, "
+                    "estabilidad y relación del empleo con lo que estudió."},
+    "Personal": {"icono": "🌱", "que": "Calidad de vida y bienestar después del título, y lo que el "
+                 "graduado siente que la formación le aportó."},
+    "Académica": {"icono": "🎓", "que": "Si sigue formándose después del grado: posgrados y otros títulos."},
+    "Relación con la Universidad": {"icono": "🏛️", "que": "El vínculo con la USTA: recomendación e "
+                                    "interés en volver a estudiar. No mide transformación; alimenta el portafolio."},
+}
+
+st.set_page_config(page_title="Modelo de Transformación del Graduado · USTA", page_icon="🎓",
+                   layout="wide")
+
+
+# ---------------------------------------------------------------------------
+# Datos (solo agregados)
+# ---------------------------------------------------------------------------
+@st.cache_data
+def cargar():
+    datos, dic, explica = F.cargar()
+    leer = lambda p: json.loads(p.read_text(encoding="utf-8"))  # noqa: E731
+    conceptual = leer(F.config.CONTENIDO_CONCEPTUAL)
+    marcos = leer(F.config.CONTENIDO_MARCOS)
+    return (datos, F.diccionario_con_veredicto(dic), explica, conceptual, marcos,
+            F.fichas(datos, dic, explica))
+
+
+DATOS, DIC, EXPLICA, CONC, MARCOS, FICHAS = cargar()
+IND = {i["id"]: i for i in DATOS["indicadores"]}
+MODELO = CONC["modelo"]
+
+
+# ---------------------------------------------------------------------------
+# Estilo y componentes
+# ---------------------------------------------------------------------------
+st.markdown(f"""
+<style>
+h1, h2, h3 {{ color: {NAVY}; font-family: Cambria, Georgia, serif; }}
+.kicker {{ color: #7A5A00; font-size: .78rem; letter-spacing: .14em; text-transform: uppercase;
+          font-weight: 700; margin-bottom: -.4rem; }}
+/* Cuadros simétricos: un cuadro solo en su columna ocupa todo el alto de la fila. */
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:only-child,
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:only-child [data-testid="stMarkdown"],
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:only-child [data-testid="stMarkdownContainer"] {{
+    height: 100%; }}
+.card, .fase {{ height: 100%; box-sizing: border-box; display: flex; flex-direction: column; }}
+.card .fuente:last-child, .fase .pie {{ margin-top: auto !important; padding-top: .5rem; }}
+.fase.ruta .titulo {{ font-weight: 700; font-size: 1.35rem; line-height: 1.25; color: #fff;
+                     min-height: 3.75em; margin: .35rem 0 .6rem 0; }}
+.fase.ruta .producto {{ line-height: 1.5; min-height: 4.5em; }}
+.card {{ background: #fff; border: 1px solid #E3E8F0; border-radius: 10px; padding: 1rem 1.1rem;
+        box-shadow: 0 1px 2px rgba(10,37,87,.05); }}
+.card h4 {{ margin: 0 0 .35rem 0; color: {NAVY}; font-size: 1.02rem; }}
+.card p {{ margin: 0; font-size: .92rem; color: #33415C; }}
+.navy {{ background: {NAVY}; color: #fff; border-radius: 10px; padding: 1rem 1.2rem; }}
+.navy b {{ color: {GOLD}; }}
+.simple {{ background: #FFF4D1; border-left: 4px solid {GOLD}; border-radius: 6px;
+          padding: .7rem 1rem; margin: .4rem 0 1rem 0; color: #3D2E00; }}
+.fuente {{ color: #6B7A93; font-size: .78rem; margin-top: .3rem; }}
+.chip {{ display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .75rem;
+        font-weight: 600; margin: 0 .25rem .25rem 0; background: #E8EEF8; color: {NAVY2}; }}
+.chip.gold {{ background: #FFF4D1; color: #7A5A00; }}
+.chip.ok {{ background: #E3F4EA; color: #1E6B3C; }}
+.chip.no {{ background: #F6E3E3; color: #8A2323; }}
+.fase {{ border-radius: 10px; padding: .9rem 1rem; color: #fff; height: 100%; }}
+.fase small {{ opacity: .85; }}
+table.ficha {{ width: 100%; border-collapse: collapse; font-size: .92rem; }}
+table.ficha th {{ width: 24%; text-align: left; vertical-align: top; background: #EEF2F8; color: {NAVY};
+                 padding: .45rem .7rem; border: 1px solid #D5DCE8; }}
+table.ficha td {{ padding: .45rem .7rem; border: 1px solid #D5DCE8; background: #fff; }}
+.big {{ font-size: 2.2rem; font-weight: 700; color: {SERIES}; line-height: 1.1; }}
+</style>""", unsafe_allow_html=True)
+
+
+def encabezado(kicker: str, titulo: str, intro: str | None = None):
+    st.markdown(f'<div class="kicker">{kicker}</div>', unsafe_allow_html=True)
+    st.title(titulo)
+    if intro:
+        st.markdown(intro)
+
+
+def simple(texto: str):
+    st.markdown(f'<div class="simple"><b>En pocas palabras:</b> {texto}</div>',
+                unsafe_allow_html=True)
+
+
+def fuente(texto: str):
+    st.markdown(f'<div class="fuente">Fuente: {texto}</div>', unsafe_allow_html=True)
+
+
+def card(titulo: str, cuerpo: str, pie: str = ""):
+    pie_html = f'<div class="fuente">{pie}</div>' if pie else ""
+    st.markdown(f'<div class="card"><h4>{titulo}</h4><p>{cuerpo}</p>{pie_html}</div>',
+                unsafe_allow_html=True)
+
+
+def chips(items, clase=""):
+    return "".join(f'<span class="chip {clase}">{i}</span>' for i in items)
+
+
+def fmt(x, dec=1):
+    return f"{x:,.{dec}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def etiqueta_cohorte(et: str, base: str) -> str:
+    # La encuesta de Percepción es de 2022: su última cohorte solo tiene graduados de 2022.
+    return "2022" if base == "percepcion" and et == "2022–2024" else et
+
+
+def barras_ci(filas, etiqueta="etiqueta", valor="pct", alto=None, ref=None, orden=None,
+              sufijo=" %", rango=(0, 100)):
+    """Barras horizontales con intervalo de confianza; grupos con n < 30 en gris."""
+    if not filas:
+        st.caption("Sin datos para este corte.")
+        return
+    df = pd.DataFrame(filas)
+    if orden:
+        df["_o"] = df[etiqueta].map({k: i for i, k in enumerate(orden)}).fillna(99)
+        df = df.sort_values("_o", ascending=False)
+    else:
+        df = df.iloc[::-1]
+    ok = df.get("suficiente", pd.Series(True, index=df.index)).fillna(True)
+    color = [SERIES if s else GRIS for s in ok]
+    fig = go.Figure(go.Bar(
+        x=df[valor], y=df[etiqueta], orientation="h", marker_color=color,
+        error_x=dict(type="data", symmetric=False, array=df["ls"] - df[valor],
+                     arrayminus=df[valor] - df["li"], color=NAVY, thickness=1.2, width=4),
+        text=[f"{fmt(v)}{sufijo}" for v in df[valor]], textposition="outside",
+        cliponaxis=False,
+        customdata=df[["n", "li", "ls"]].values,
+        hovertemplate="%{y}: %{x:.1f}" + sufijo + "<br>IC 95 %: %{customdata[1]:.1f}–%{customdata[2]:.1f}"
+                      "<br>n = %{customdata[0]}<extra></extra>"))
+    if ref is not None:
+        fig.add_vline(x=ref, line_dash="dot", line_color=GOLD, line_width=2)
+    fig.update_layout(height=alto or 70 + 42 * len(df), margin=dict(l=10, r=60, t=10, b=10),
+                      xaxis=dict(range=list(rango), showgrid=True, gridcolor="#EEF1F6",
+                                 ticksuffix=sufijo),
+                      yaxis=dict(title=None), plot_bgcolor="#fff", showlegend=False)
+    st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+
+
+def tabla_html(df: pd.DataFrame):
+    st.dataframe(df, hide_index=True, width="stretch")
+
+
+# ---------------------------------------------------------------------------
+# Inicio
+# ---------------------------------------------------------------------------
+def inicio():
+    encabezado("Documento técnico del modelo · Consultoría Estadística USTA 2026-II",
+               "Modelo de Seguimiento y Evaluación de la Transformación de los Graduados")
+    st.markdown(f'<div class="navy"><b>Objetivo del modelo.</b> {MODELO["objetivo"]["texto"]}'
+                f'<div style="opacity:.75;font-size:.8rem;margin-top:.4rem">{MODELO["objetivo"]["fuente"]}</div></div>',
+                unsafe_allow_html=True)
+    st.write("")
+    simple("este documento reúne lo que se construyó en la Fase 1: qué es la transformación del "
+           "graduado, en qué dimensiones se mira, qué variables de las bases sirven para medirla y "
+           "por qué, los indicadores con sus fichas técnicas y un prototipo de índice. Termina con "
+           "la propuesta para validar el modelo en la Fase 2.")
+
+    tot = sum(b["registros_analizables"] for b in DATOS["bases"].values())
+    c = st.columns(5)
+    for col, (v, t) in zip(c, [(3, "bases de graduados"), (f"{tot:,}".replace(",", "."), "registros analizables"),
+                               (len(DIC), "variables revisadas"), (len(IND), "indicadores con ficha"),
+                               (fmt(DATOS["indice"]["general"]["media"]), "índice prototipo (0–100)")]):
+        col.markdown(f'<div class="card"><div class="big">{v}</div><p>{t}</p></div>',
+                     unsafe_allow_html=True)
+
+    st.subheader("Ruta del modelo y dónde estamos")
+    colores = [NAVY, "#0E7C86", "#2E7D32", "#6B7A93"]
+    estado = ["Cumplida (institucional)", "Entrega del equipo", "Propuesta del equipo", "Futuro"]
+    cols = st.columns(4)
+    for col, f, colr, est in zip(cols, MODELO["fases"], colores, estado):
+        col.markdown(f'<div class="fase ruta" style="background:{colr}"><small>{f["periodo"]}</small>'
+                     f'<div class="titulo">{f["fase"]}</div>'
+                     f'<div class="producto">Producto: <b>{f["producto"]}</b></div>'
+                     f'<div class="pie"><span class="chip gold">{est}</span></div></div>',
+                     unsafe_allow_html=True)
+    fuente(MODELO["fases_fuente"])
+
+    st.subheader("Objetivos de esta consultoría")
+    obj = EXPLICA["objetivos"]
+    st.markdown(f"**Objetivo general.** {obj['general']}")
+    cols = st.columns(3)
+    for col, e in zip(cols, obj["especificos"]):
+        with col:
+            card(e["verbo"], e["texto"], f"Evidencia: {e['evidencia']}")
+    fuente(obj["origen"])
+
+    st.subheader("Cómo leer este documento")
+    st.markdown("""
+| Sección del menú | Responde a… |
+|---|---|
+| **Fase 0 · Formulación** | ¿Qué se propuso el proyecto y con qué referentes? |
+| **Fase 1 · Marco conceptual** | ¿Qué entendemos por transformación? (pregunta 1 del modelo) |
+| **Fase 1 · Dimensiones, variables e indicadores** ⭐ | ¿Qué se puede medir y con cuáles variables? (preguntas 2 y 4) |
+| **Fase 1 · Fuentes de información** | ¿Con qué información contamos? (pregunta 3) |
+| **Fase 1 · Instrumentos y métodos** | ¿Cómo se mide y qué hay que preguntar en adelante? (pregunta 4) |
+| **Fase 1 · Diseño del modelo** | El índice, los usos de la evidencia y el plan (pregunta 5) |
+| **Fase 2 · Validación (propuesta)** | ¿Qué debe hacerse en el piloto? |
+| **Anexos** | Fichas técnicas de los 14 indicadores y glosario |
+""")
+    st.caption("Las afirmaciones tomadas de un documento llevan su fuente. Lo que no la lleva es "
+               "propuesta del equipo consultor. Todas las cifras son agregadas: ninguna página "
+               "muestra datos personales.")
+
+
+# ---------------------------------------------------------------------------
+# Fase 0
+# ---------------------------------------------------------------------------
+def fase0():
+    encabezado("Fase 0 · ago-2025 – oct-2025", "Formulación del proyecto",
+               "La fase 0 la cerró la Universidad con el proyecto aprobado. Aquí se resume lo que "
+               "de ella toma esta consultoría: objetivos, referentes, método y alineación institucional.")
+    t1, t2, t3, t4 = st.tabs(["Objetivos y alcance", "Referentes teóricos", "Diseño metodológico",
+                              "Alineación institucional"])
+    with t1:
+        st.markdown(f"**Propósito del modelo.** {MODELO['proposito']['texto']}")
+        fuente(MODELO["proposito"]["fuente"])
+        st.markdown("#### ¿El alcance es un modelo o un índice?")
+        c1, c2 = st.columns(2)
+        with c1:
+            card("El alcance es el modelo",
+                 "Un sistema completo: qué es la transformación, qué se mide, con qué fuentes, con qué "
+                 "indicadores y para qué se usa la evidencia. La consultoría entrega su base técnica.")
+        with c2:
+            card("El índice es una pieza del modelo",
+                 "Un número de 0 a 100 que resume cuatro dimensiones. Es un prototipo para discutir "
+                 "en la Fase 2, no el fin del estudio.")
+        st.markdown("#### Lo que no incluye esta etapa")
+        st.markdown("- Afirmar que la Universidad **causó** los cambios (eso es impacto, no transformación).\n"
+                    "- Recolectar datos nuevos: se trabajó con las tres bases existentes.\n"
+                    "- Fijar pesos definitivos del índice: le corresponde a la validación.")
+    with t2:
+        for b in MARCOS["teorico"]:
+            with st.expander(f"{b['n']}. {b['titulo']}", expanded=b["n"] in ("2", "3")):
+                for p in b["puntos"]:
+                    st.markdown(f"- {p['texto']}  \n  <span class='fuente'>{p['fuente']}</span>",
+                                unsafe_allow_html=True)
+                st.markdown(f"**Aporte al proyecto:** {b['aporte']}")
+        st.info(f"**Vacío que atiende el proyecto.** {MARCOS['vacio']}")
+    with t3:
+        m = MARCOS["metodologico"]
+        st.markdown(f"**Tipo de estudio.** {m['tipo']['texto']}")
+        st.markdown(f"_{m['tipo']['mixto']}_")
+        fuente("; ".join(m["tipo"]["fuentes"]))
+        c1, c2 = st.columns(2)
+        c1.markdown(f"**Unidad de análisis:** {m['unidad']}  \n**Muestreo:** {m['muestreo']['texto']}")
+        c2.markdown("**Exclusiones:**\n" + "\n".join(f"- {e}" for e in m["exclusiones"]))
+        st.markdown("#### Etapas del trabajo")
+        tabla_html(pd.DataFrame([{"Etapa": f["fase"], "Qué se hace": f["detalle"],
+                                  "Pregunta del modelo": f["pregunta"]} for f in m["fases"]]))
+        st.markdown("#### Técnicas")
+        tabla_html(pd.DataFrame(m["tecnicas"]).rename(columns={"tecnica": "Técnica", "para": "Para qué"}))
+    with t4:
+        st.markdown("El modelo responde a dos usos institucionales definidos en la lámina 4 y a la "
+                    "exigencia de acreditación del CESU.")
+        c1, c2 = st.columns(2)
+        u = CONC["usos"]
+        with c1:
+            card(u["curricular"]["titulo"], "<br>".join(f"• {x}" for x in u["curricular"]["que_permite"]),
+                 u["fuente"])
+        with c2:
+            card(u["portafolio"]["titulo"], "<br>".join(f"• {x}" for x in u["portafolio"]["ambitos"]),
+                 u["fuente"])
+        st.write("")
+        norm = next(b for b in MARCOS["teorico"] if b["n"] == "6")
+        st.markdown(f"**Marco normativo.** {norm['puntos'][0]['texto']}")
+        fuente(norm["puntos"][0]["fuente"])
+
+
+# ---------------------------------------------------------------------------
+# Fase 1 · 1. Marco conceptual
+# ---------------------------------------------------------------------------
+def f1_marco():
+    encabezado("Fase 1 · Conceptualización", "Marco conceptual de la transformación del graduado")
+    tr = CONC["transformacion"]
+    st.markdown(f'<div class="navy"><b>Transformación del graduado.</b> {tr["definicion_modelo"]["texto"]}'
+                f'<div style="opacity:.75;font-size:.8rem;margin-top:.4rem">{tr["definicion_modelo"]["fuente"]}</div></div>',
+                unsafe_allow_html=True)
+    st.write("")
+    simple("la transformación es <b>lo que cambió en la vida del graduado</b> desde que estudió. "
+           "No es lo mismo que el impacto, que es <b>la parte de ese cambio que se debe a la Universidad</b>.")
+
+    st.subheader("Observación frente a causa")
+    ej = tr["ejemplo_modelo"]
+    c1, c2 = st.columns(2)
+    with c1:
+        card("✔ Transformación (lo que mide el modelo)", f"«{ej['observacion']}»")
+    with c2:
+        card("✖ Impacto causal (exige más)", f"«{ej['causal']}»")
+    st.caption(ej["lectura"] + " · " + ej["fuente"])
+
+    st.subheader("Definición operativa para medir")
+    do = tr["definicion_operativa"]
+    st.markdown(f"> {do['texto']}")
+    for c in do["criterios"]:
+        st.markdown(f"- {c}")
+    fuente(do["origen"])
+
+    st.subheader("Conceptos que no hay que confundir")
+    tabla_html(pd.DataFrame(tr["diferencias"]).rename(
+        columns={"concepto": "Concepto", "que_es": "Qué es", "pregunta": "Pregunta que responde"}))
+
+    c1, c2 = st.columns(2)
+    with c1:
+        st.subheader("Seguimiento y evaluación")
+        for s in tr["seguimiento_vs_evaluacion"]:
+            card(s["concepto"], f"{s['funcion']}. <i>{s['pregunta']}</i>")
+            st.write("")
+        fuente(tr["seguimiento_fuente"])
+    with c2:
+        st.subheader("Factores externos")
+        st.markdown("Influyen en los resultados del graduado además de la formación; por eso se lee "
+                    "segmentado y no se afirma causalidad:")
+        st.markdown(chips(tr["factores_externos"]["lista"]), unsafe_allow_html=True)
+        fuente(tr["factores_externos"]["fuente"])
+
+    st.subheader("Las cinco preguntas del modelo y dónde se responden")
+    donde = {1: "Esta página", 2: "Dimensiones, variables e indicadores", 3: "Fuentes de información",
+             4: "Instrumentos y métodos · Diseño del modelo", 5: "Diseño del modelo"}
+    tabla_html(pd.DataFrame([{"#": p["n"], "Pregunta": p["pregunta"], "Tareas": " · ".join(p["tareas"]),
+                              "Dónde se responde": donde[p["n"]]} for p in MODELO["preguntas"]]))
+    fuente(MODELO["preguntas_fuente"])
+
+
+# ---------------------------------------------------------------------------
+# Fase 1 · 2. Dimensiones, variables e indicadores (sección central)
+# ---------------------------------------------------------------------------
+def f1_dimensiones():
+    encabezado("Fase 1 · Conceptualización · sección central",
+               "Definición de dimensiones, variables e indicadores")
+    simple("la transformación se mira en <b>cuatro dimensiones</b>. Dentro de cada una hay "
+           "<b>aspectos</b> (por ejemplo, movilidad social). Cada aspecto se mide con <b>variables</b> "
+           "(preguntas de las encuestas) y las variables se combinan en <b>indicadores</b>.")
+    st.markdown(chips(["Dimensión", "→ Aspecto", "→ Variable", "→ Indicador", "→ Índice"], "gold"),
+                unsafe_allow_html=True)
+    t1, t2, t3, t4 = st.tabs(["① Dimensiones", "② Variables: ¿cuáles sirven y por qué?",
+                              "③ Indicadores", "④ Matriz de medibilidad"])
+    with t1:
+        _dimensiones()
+    with t2:
+        _variables()
+    with t3:
+        _indicadores()
+    with t4:
+        _matriz()
+
+
+def _dimensiones():
+    aspectos = CONC["aspectos"]["lista"]
+    conteo = DIC[DIC["veredicto"].str.startswith("Sirve")].groupby("dimension").size()
+    for nombre, info in DIMENSIONES.items():
+        asp = [a for a in aspectos if a["dimension"] == nombre]
+        inds = [i for i in DATOS["indicadores"] if i["dimension"] == nombre]
+        with st.container(border=True):
+            c1, c2 = st.columns([2, 3])
+            with c1:
+                st.markdown(f"### {info['icono']} {nombre}")
+                st.markdown(info["que"])
+                st.markdown(f"**{conteo.get(nombre, 0)}** variables útiles · **{len(inds)}** indicadores")
+            with c2:
+                if asp:
+                    st.markdown("**Aspectos:** " + chips([f"{a['aspecto']} ({a['evidencia']})" for a in asp]),
+                                unsafe_allow_html=True)
+                for i in inds:
+                    r = i["resultados"][0]
+                    st.markdown(f"`{i['id']}` **{i['nombre']}** — {fmt(r['pct'])} % "
+                                f"<span class='fuente'>({r['etiqueta']}, n = {r['n']:,})</span>".replace(",", "."),
+                                unsafe_allow_html=True)
+    st.caption("Entre paréntesis, el nivel de evidencia del aspecto: A hecho verificable, B cambio "
+               "declarado, C percepción, D no disponible. Dimensiones: Modelo 2026, lámina 3.")
+
+
+def _variables():
+    st.markdown("Se revisaron **las 352 variables** de las tres bases. Para cada una se respondieron "
+                "cinco preguntas:")
+    cols = st.columns(5)
+    criterios = [("1. ¿Es pertinente?", "¿Corresponde a un aspecto de alguna dimensión del modelo?"),
+                 ("2. ¿Tiene un momento?", "¿Dice cómo estaba antes, cómo está ahora o qué cambió? Sin dos momentos es seguimiento, no transformación."),
+                 ("3. ¿Tiene respuestas?", "¿Cuántas personas la contestaron? Las preguntas filtradas solo sirven para su subgrupo."),
+                 ("4. ¿Qué tan sólida es?", "Nivel de evidencia: hecho verificable, cambio declarado o percepción."),
+                 ("5. ¿Se puede usar?", "Si identifica a la persona (Ley 1581) o es un control del formulario, no se analiza.")]
+    for col, (t, d) in zip(cols, criterios):
+        with col:
+            card(t, d)
+    st.write("")
+
+    # Embudo
+    total = len(DIC)
+    analizables = DIC[~DIC["veredicto"].str.startswith("No se usa")]
+    transf = DIC[DIC["veredicto"].isin(["Sirve: ya se usa", "Sirve: disponible", "Sirve con reservas"])]
+    usadas = DIC[DIC["veredicto"] == "Sirve: ya se usa"]
+    c1, c2 = st.columns([3, 2])
+    with c1:
+        fig = go.Figure(go.Funnel(
+            y=["Variables en las 3 bases", "Analizables (sin datos personales ni controles)",
+               "Miden algún aspecto de la transformación", "Ya alimentan indicadores o el índice"],
+            x=[total, len(analizables), len(transf), len(usadas)],
+            marker_color=[GRIS, NAVY2, SERIES, GOLD], textinfo="value",
+            textfont=dict(size=16)))
+        fig.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=10), plot_bgcolor="#fff")
+        st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+    with c2:
+        st.markdown("#### Cómo leer el embudo")
+        st.markdown(f"- **{len(transf)}** variables sirven para medir transformación.\n"
+                    f"- Solo **{len(usadas)}** se usan hoy: se eligieron las que tienen dos momentos, "
+                    "más respuestas y escalas claras.\n"
+                    f"- Las **{len(DIC[DIC['veredicto'] == 'Sirve: disponible'])}** «disponibles» son "
+                    "candidatas para nuevos indicadores en la Fase 2.\n"
+                    "- El resto describe al graduado, alimenta el portafolio o no se puede usar.")
+
+    # Veredicto por base
+    orden = F.ORDEN_VEREDICTO
+    paleta = {"Sirve: ya se usa": GOLD, "Sirve: disponible": SERIES, "Sirve con reservas": "#7FA6E0",
+              "Sirve: para desagregar": "#0E7C86", "Sirve: para describir": "#8FC6CB",
+              "Sirve: para el portafolio": "#2E7D32", "No se usa: control": "#C9CED8",
+              "No se usa: dato personal": "#B23B3B", "Revisar": "#999"}
+    nb = NOMBRE_CORTO
+    tab = DIC.groupby(["base", "veredicto"]).size().unstack(fill_value=0)
+    fig = go.Figure()
+    for v in orden:
+        if v in tab:
+            fig.add_bar(y=[nb[b] for b in tab.index], x=tab[v], name=v, orientation="h",
+                        marker_color=paleta[v])
+    fig.update_layout(barmode="stack", height=250, margin=dict(l=10, r=10, t=30, b=10),
+                      legend=dict(orientation="h", y=-0.25), plot_bgcolor="#fff",
+                      title=dict(text="Veredicto por base (número de variables)", font=dict(size=14)))
+    st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+
+    with st.expander("¿Qué significa cada veredicto?", expanded=False):
+        expl = {
+            "Sirve: ya se usa": "Alimenta uno de los 14 indicadores o el índice.",
+            "Sirve: disponible": "Mide transformación (tiene un antes, un ahora o un cambio) pero aún no está en un indicador.",
+            "Sirve con reservas": "Es percepción de lo que aportó la formación, o texto abierto que hay que codificar.",
+            "Sirve: para desagregar": "Sede o año de grado: permite cortar los resultados por grupos.",
+            "Sirve: para describir": "Caracteriza al graduado o su contexto (edad, territorio, programa).",
+            "Sirve: para el portafolio": "Dice qué servicios o formación demanda el graduado.",
+            "No se usa: control": "Consentimiento o metadatos del formulario.",
+            "No se usa: dato personal": "Nombre, documento, correo, teléfono o empresa. Excluida (Ley 1581 de 2012).",
+        }
+        tabla_html(pd.DataFrame([{"Veredicto": k, "Significado": v,
+                                  "Variables": int((DIC["veredicto"] == k).sum())} for k, v in expl.items()]))
+
+    st.markdown("#### Explorar las variables")
+    c1, c2, c3, c4 = st.columns([1.2, 1.4, 1.6, 2])
+    bases = c1.multiselect("Base", list(nb), default=list(nb), format_func=lambda b: nb[b])
+    dims = c2.multiselect("Dimensión", sorted(DIC["dimension"].unique()))
+    vers = c3.multiselect("Veredicto", [v for v in orden if v in set(DIC["veredicto"])],
+                          default=["Sirve: ya se usa", "Sirve: disponible"])
+    texto = c4.text_input("Buscar en la pregunta", placeholder="p. ej. estrato, empleo, posgrado")
+    vista = DIC[DIC["base"].isin(bases)]
+    if dims:
+        vista = vista[vista["dimension"].isin(dims)]
+    if vers:
+        vista = vista[vista["veredicto"].isin(vers)]
+    if texto:
+        vista = vista[vista["pregunta"].str.contains(texto, case=False, na=False)]
+    vista = vista.assign(base=vista["base"].map(nb), respondida=100 - vista["faltantes_pct"])
+    st.caption(f"{len(vista)} variables")
+    st.dataframe(
+        vista[["base", "pregunta", "dimension", "aspecto", "momento", "respondida", "veredicto",
+               "por_que", "usada_en"]],
+        hide_index=True, width="stretch", height=520, row_height=64,
+        column_config={
+            "base": st.column_config.TextColumn("Base", width="small"),
+            "pregunta": st.column_config.TextColumn("Pregunta (variable)", width="large"),
+            "dimension": "Dimensión", "aspecto": "Aspecto", "momento": "Momento",
+            "respondida": st.column_config.ProgressColumn("% con respuesta", format="%.0f %%",
+                                                          min_value=0, max_value=100),
+            "veredicto": "Veredicto",
+            "por_que": st.column_config.TextColumn("¿Por qué?", width="large"),
+            "usada_en": "Usada en",
+        })
+    st.caption("Diccionario generado por el agente de perfilado (reglas en agente/config.py). "
+               "La columna «Momento» dice si la pregunta mira el antes, el presente o el cambio.")
+
+
+def _base_desglose(ind):
+    return ind["resultados"][0]["base"]
+
+
+def _indicadores():
+    st.markdown("Los 14 indicadores convierten las variables útiles en porcentajes comparables. "
+                "Cada uno tiene ficha técnica en **Anexos**.")
+    tipos = {"cambio": "Cambio (antes → después)", "nivel": "Nivel (situación actual)",
+             "contribución": "Contribución percibida", "portafolio": "Portafolio de servicios"}
+    resumen = pd.DataFrame([{"Código": i["id"], "Indicador": i["nombre"], "Dimensión": i["dimension"],
+                             "Tipo": tipos.get(i["tipo"], i["tipo"]),
+                             "Resultado": f"{fmt(i['resultados'][0]['pct'])} %",
+                             "n": i["resultados"][0]["n"],
+                             "Evidencia": F.META[i["id"]]["evidencia"]} for i in DATOS["indicadores"]])
+    tabla_html(resumen)
+
+    st.markdown("#### Ver un indicador")
+    sel = st.selectbox("Indicador", list(IND), format_func=lambda k: f"{k} · {IND[k]['nombre']}")
+    ind = IND[sel]
+    lect = EXPLICA["lecturas"].get(sel, {})
+    st.markdown(f"**Pregunta que responde:** {lect.get('pregunta', '')}")
+    c1, c2 = st.columns([3, 2])
+    with c1:
+        filas = [{**r, "etiqueta": f"{r['etiqueta']}"} for r in ind["resultados"]]
+        barras_ci(filas)
+        if ind["extra"] and "distribucion" in ind["extra"]:
+            st.markdown("**Distribución completa**")
+            barras_ci(ind["extra"]["distribucion"])
+        if ind["extra"] and "items" in ind["extra"]:
+            st.markdown("**Por ítem**")
+            barras_ci(ind["extra"]["items"])
+    with c2:
+        st.markdown(f"**Definición.** {ind['definicion']}")
+        st.markdown(f"**Fórmula.** `{ind['formula']}`")
+        st.markdown(f"**Universo.** {ind['universo']}")
+        st.markdown(f'<div class="simple"><b>Ojo:</b> {lect.get("ojo", "")}</div>', unsafe_allow_html=True)
+        st.markdown(f"**Limitaciones.** {ind['limitaciones']}")
+    base = _base_desglose(ind)
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**Por sede**")
+        barras_ci(ind["por_sede"])
+    with c2:
+        st.markdown("**Por cohorte de grado**")
+        coh = [{**r, "etiqueta": etiqueta_cohorte(r["etiqueta"], base)} for r in ind["por_cohorte"]]
+        barras_ci(coh, orden=ORDEN_COH)
+    st.caption("Barras grises: menos de 30 respuestas, no se interpretan. Línea negra: intervalo de "
+               "confianza de Wilson al 95 %. Los porcentajes describen a quienes respondieron, no a "
+               "todos los graduados.")
+    if ind["extra"] and "matriz" in ind["extra"]:
+        m = ind["extra"]["matriz"]
+        st.markdown("**Matriz de transición: de dónde venían (filas) y a dónde llegaron (columnas), % por fila**")
+        z = m["pct_fila"] if "pct_fila" in m else m["conteos"]
+        fig = go.Figure(go.Heatmap(z=z, x=[str(e) for e in m["etiquetas"]], y=[str(e) for e in m["etiquetas"]],
+                                   colorscale=[[0, "#F4F7FC"], [1, SERIES]], showscale=False,
+                                   text=[[fmt(v) for v in fila] for fila in z], texttemplate="%{text}"))
+        fig.update_layout(height=360, margin=dict(l=10, r=10, t=10, b=10),
+                          xaxis_title="Después", yaxis_title="Antes", yaxis_autorange="reversed")
+        st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+        st.caption("La diagonal son quienes se quedaron igual. Arriba de la diagonal, quienes subieron.")
+
+
+def _matriz():
+    a = CONC["aspectos"]
+    st.markdown("Qué aspectos de la transformación (lámina 3) se pueden medir con las bases "
+                "disponibles, con qué nivel de evidencia y con qué indicador.")
+    df = pd.DataFrame([{"Aspecto": x["aspecto"], "Dimensión": x["dimension"], "¿Medible?": x["medible"],
+                        "Evidencia": x["evidencia"], "Base": x["base"], "Cómo se mide": x["como"],
+                        "Indicadores": ", ".join(x["indicadores"]) or "—"} for x in a["lista"]])
+    tabla_html(df)
+    fuente(a["fuente"])
+    st.markdown("#### Niveles de evidencia")
+    cols = st.columns(4)
+    for col, n in zip(cols, CONC["niveles_evidencia"]):
+        with col:
+            card(f"{n['nivel']} · {n['nombre']}", n["descripcion"], f"Ej.: {n['ejemplo']}")
+
+
+# ---------------------------------------------------------------------------
+# Fase 1 · 3. Fuentes
+# ---------------------------------------------------------------------------
+def f1_fuentes():
+    encabezado("Fase 1 · Conceptualización", "Identificación y preparación de fuentes de información")
+    simple("se usaron tres encuestas a graduados. Se limpiaron (sin consentimiento, duplicados y "
+           "filas de control fuera) y se revisó si se podían unir: casi no comparten personas, así que "
+           "la transformación se mide con preguntas de «antes y ahora» y comparando promociones.")
+    cols = st.columns(3)
+    for col, (k, b) in zip(cols, DATOS["bases"].items()):
+        with col:
+            card(b["nombre"], f"{b['descripcion']}<br><br><b>{b['registros_originales']:,}</b> registros → "
+                 f"<b>{b['registros_analizables']:,}</b> analizables · {b['variables']} variables".replace(",", "."),
+                 f"Recolección: {b['recoleccion']}")
+    st.subheader("Depuración documentada")
+    sel = st.radio("Base", list(DATOS["bases"]), horizontal=True,
+                   format_func=lambda k: DATOS["bases"][k]["nombre"])
+    b = DATOS["bases"][sel]
+    tabla_html(pd.DataFrame(b["limpieza"]).rename(columns={"paso": "Paso", "filas": "Filas", "motivo": "Motivo"}))
+    c1, c2 = st.columns(2)
+    for col, campo, titulo in [(c1, "sede", "Composición por sede"), (c2, "cohorte", "Composición por cohorte")]:
+        filas = b["composicion"].get(campo) or []
+        with col:
+            st.markdown(f"**{titulo}**")
+            if filas:
+                df = pd.DataFrame(filas)
+                if campo == "cohorte":
+                    df["categoria"] = [etiqueta_cohorte(c, sel) for c in df["categoria"]]
+                    df["_o"] = df["categoria"].map({k: i for i, k in enumerate(ORDEN_COH)}).fillna(99)
+                    df = df.sort_values("_o")
+                fig = go.Figure(go.Bar(x=df["pct"], y=df["categoria"], orientation="h", marker_color=SERIES,
+                                       text=[f"{fmt(p)} % ({n})" for p, n in zip(df["pct"], df["n"])],
+                                       textposition="outside", cliponaxis=False))
+                fig.update_layout(height=60 + 34 * len(df), margin=dict(l=10, r=70, t=5, b=5),
+                                  yaxis_autorange="reversed", plot_bgcolor="#fff", xaxis_ticksuffix=" %")
+                st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+            else:
+                st.caption("No disponible.")
+    st.subheader("¿Se pueden unir las bases?")
+    tabla_html(pd.DataFrame(DATOS["cruces"]).rename(columns={
+        "par": "Cruce", "criterio": "Llave", "a": "Registros A", "b": "Registros B",
+        "comunes": "En común", "lectura": "Lectura"}))
+    st.caption("Los cruces se hicieron con huellas cifradas (SHA-256): ningún documento ni correo sale del equipo.")
+    st.subheader("Fuentes que el modelo pide y aún no están")
+    st.markdown("La lámina 2 pide triangular con empleadores y fuentes externas. Propuesta para la Fase 2:")
+    tabla_html(pd.DataFrame([
+        {"Fuente": "Empleadores", "Para qué": "Valorar el desempeño del graduado (hoy nivel D: no hay base)", "Cómo": "Encuesta corta; reutilizar instrumentos del IMS 2019"},
+        {"Fuente": "Observatorio Laboral para la Educación (MEN)", "Para qué": "Vinculación formal e ingreso de los graduados", "Cómo": "Solicitud institucional / convenio"},
+        {"Fuente": "SNIES / registro de graduados USTA", "Para qué": "Totales para ponderar y verificar títulos de posgrado", "Cómo": "Solicitud a la Dirección de Graduados"},
+        {"Fuente": "RUES y CvLAC", "Para qué": "Verificar emprendimientos, gremios e investigación", "Cómo": "Consulta pública, con consentimiento"},
+        {"Fuente": "DANE, SECOP", "Para qué": "Contexto territorial y contratación pública", "Cómo": "Datos abiertos"},
+    ]))
+    fuente("Modelo 2026, lámina 2 (fuentes); propuesta del equipo (uso y forma de acceso).")
+
+
+# ---------------------------------------------------------------------------
+# Fase 1 · 4. Instrumentos y métodos
+# ---------------------------------------------------------------------------
+INSTRUMENTO = [
+    ("Identificación", "Huella cifrada del documento, programa, sede, fecha de grado", "—",
+     "Llave estable para seguir a la misma persona (hoy solo 89 coinciden entre bases)", "Todos"),
+    ("Social", "Estrato al graduarse / estrato actual", "1 a 6", "Igual que Percepción", "SOC-01, índice"),
+    ("Social", "Máximo nivel educativo de la madre y del padre", "Categorías de PENSER", "Unifica las dos versiones actuales", "SOC-02"),
+    ("Social", "Ingreso mensual al graduarse / actual", "Rangos en SMMLV", "Hoy solo hay «¿es mayor?» (sí/no)", "SOC-03"),
+    ("Profesional", "Situación laboral al graduarse / actual", "Empleado, independiente, buscando, inactivo", "Misma escala en las tres bases", "PRO-01, PRO-04"),
+    ("Profesional", "Tiempo hasta el primer empleo", "Categorías de Percepción", "Sin cambios", "PRO-01, índice"),
+    ("Profesional", "Tipo de contrato del primer empleo / actual", "6 categorías cerradas", "Hoy 22 variantes de texto", "PRO-03"),
+    ("Profesional", "Correspondencia del empleo con la formación, primero / actual", "0 a 5", "Sin cambios", "PRO-02, índice"),
+    ("Profesional", "Nivel del cargo, primero / actual", "Operativo, profesional, coordinación, dirección", "Hoy en texto libre: no medible", "Nuevo: desarrollo profesional"),
+    ("Personal", "Seis mejoras de bienestar después del título", "Sí / No", "Sin cambios", "PER-01, índice"),
+    ("Académica", "Máximo nivel de estudios y estudios en curso", "Niveles SNIES", "Unifica PENSER y Percepción", "ACA-01, índice"),
+    ("Académica / Social", "Investigación, proyectos comunitarios, gremios, distinciones", "Sí / No + año", "El año permite saber si fue después del grado", "ACA-02"),
+    ("Relación", "Recomendación del programa e interés en formación continua", "0 a 10 / Sí-No", "Sin cambios", "REL-01, REL-02"),
+]
+
+
+def f1_instrumentos():
+    encabezado("Fase 1 · Conceptualización", "Diseño de instrumentos y métodos de análisis")
+    simple("para medir transformación hay que preguntar <b>lo mismo, de la misma forma, en dos "
+           "momentos</b>. Hoy cada encuesta pregunta distinto. Proponemos un módulo mínimo común "
+           "para todas las encuestas futuras y los métodos para analizarlo.")
+    st.subheader("Métodos de análisis")
+    tabla_html(pd.DataFrame([
+        {"Método": "Proporción con intervalo de Wilson (95 %)", "Para qué sirve": "Dar cada porcentaje con su margen de error, también en grupos pequeños", "Dónde se usa": "Los 14 indicadores"},
+        {"Método": "Matriz de transición", "Para qué sirve": "Ver de dónde venían y a dónde llegaron", "Dónde se usa": "Estrato, contrato, correspondencia empleo–formación"},
+        {"Método": "Preguntas retrospectivas", "Para qué sirve": "Obtener el «antes» en la misma encuesta", "Dónde se usa": "Estrato al graduarse, primer empleo"},
+        {"Método": "Pseudo-panel por cohortes", "Para qué sirve": "Aproximar el efecto del tiempo comparando promociones", "Dónde se usa": "Desgloses por cohorte"},
+        {"Método": "Índice formativo (0–100)", "Para qué sirve": "Resumir cuatro dimensiones en un número", "Dónde se usa": "Prototipo de índice"},
+        {"Método": "Análisis factorial (pendiente)", "Para qué sirve": "Validar las escalas de competencias", "Dónde se usa": "Fase 2"},
+        {"Método": "Ponderación por raking (pendiente)", "Para qué sirve": "Corregir que respondan más unos grupos que otros", "Dónde se usa": "Fase 2, con totales del SNIES"},
+    ]))
+    st.subheader("Instrumento mínimo común (propuesta)")
+    st.markdown("Preguntas que toda encuesta de graduados de la USTA debería incluir, con la misma "
+                "redacción y escala, para que los indicadores se puedan calcular igual cada año.")
+    tabla_html(pd.DataFrame(INSTRUMENTO, columns=["Dimensión", "Pregunta (antes / ahora)", "Escala",
+                                                  "Qué cambia frente a hoy", "Alimenta"]))
+    st.subheader("¿Cuándo preguntar?")
+    cols = st.columns(4)
+    for col, (t, d) in zip(cols, [("Al grado", "Línea base: la situación «antes». Elimina el sesgo de recuerdo."),
+                                  ("1 año", "Inserción laboral y primer empleo."),
+                                  ("3 años", "Trayectoria: cambios de empleo, posgrado."),
+                                  ("5 años o más", "Movilidad social y consolidación.")]):
+        with col:
+            card(t, d)
+    st.caption("Propuesta del equipo. Con la misma persona medida en varios momentos (panel) se "
+               "pasa de comparar promociones a seguir trayectorias reales.")
+
+
+# ---------------------------------------------------------------------------
+# Fase 1 · 5. Diseño del modelo y plan
+# ---------------------------------------------------------------------------
+def f1_diseno():
+    encabezado("Fase 1 · Conceptualización", "Diseño del modelo y plan de implementación")
+    st.subheader("El modelo en una línea")
+    pasos = [("Fuentes", "3 encuestas + fuentes externas"), ("Variables", f"{len(DIC)} revisadas"),
+             ("Indicadores", f"{len(IND)} con ficha"), ("Índice", "prototipo 0–100"),
+             ("Usos", "currículo y portafolio")]
+    cols = st.columns(len(pasos))
+    for i, (col, (t, d)) in enumerate(zip(cols, pasos)):
+        bg = GOLD if t == "Índice" else NAVY
+        fg = NAVY if t == "Índice" else "#fff"
+        col.markdown(f'<div class="fase" style="background:{bg};color:{fg};text-align:center">'
+                     f'<h4 style="color:{fg};margin:0">{t}</h4><small>{d}</small></div>', unsafe_allow_html=True)
+    st.caption("Seguimiento (observar) → evaluación (interpretar) → decisiones. Modelo 2026, láminas 3 y 4.")
+
+    st.subheader("Prototipo de Índice de Transformación del Graduado")
+    ix = DATOS["indice"]
+    simple(f"cada graduado recibe de 0 a 100 en cada dimensión y el índice es el promedio de las cuatro. "
+           f"En promedio los graduados obtienen <b>{fmt(ix['general']['media'])}</b> de 100 "
+           f"(IC 95 %: {fmt(ix['general']['li'])}–{fmt(ix['general']['ls'])}; n = {ix['n']:,}).".replace(",", "."))
+    cols = st.columns(5)
+    for col, (k, v) in zip(cols, ix["componentes"].items()):
+        col.markdown(f'<div class="card"><p>{k}</p><div class="big">{fmt(v["media"])}</div><p>de 100</p></div>',
+                     unsafe_allow_html=True)
+    cols[4].markdown(f'<div class="card" style="background:{NAVY}"><p style="color:#fff">Índice</p>'
+                     f'<div class="big" style="color:{GOLD}">{fmt(ix["general"]["media"])}</div>'
+                     f'<p style="color:#fff">de 100</p></div>', unsafe_allow_html=True)
+    st.write("")
+    with st.expander("Cómo se calcula cada componente"):
+        for c in CONC["indice"]["componentes"]:
+            st.markdown(f"- **{c['dimension']}:** {c['regla']}")
+        st.markdown(f"**Agregación:** {CONC['indice']['agregacion']}")
+        st.markdown(f"**Por qué una sola base:** {CONC['indice']['por_que_una_base']}")
+        st.markdown(f"**Alfa de Cronbach = {fmt(ix['alfa_cronbach'], 2)}.** {CONC['indice']['lectura_alfa']}")
+    c1, c2 = st.columns(2)
+    filas = lambda L, b: [{**r, "etiqueta": etiqueta_cohorte(r["grupo"], b), "pct": r["media"],  # noqa: E731
+                           "suficiente": r["suficiente"]} for r in L]
+    with c1:
+        st.markdown("**Por cohorte de grado**")
+        barras_ci(filas(ix["por_cohorte"], "percepcion"), orden=ORDEN_COH, sufijo="",
+                  ref=ix["general"]["media"])
+    with c2:
+        st.markdown("**Por sede**")
+        barras_ci(filas(ix["por_sede"], "percepcion"), sufijo="", ref=ix["general"]["media"])
+    st.caption("Línea dorada: promedio general. Las sedes no se ordenan como ranking: las muestras no "
+               "son representativas y falta ponderar.")
+    st.markdown("**Lo que falta para validar el índice**")
+    for p in CONC["indice"]["pendiente"] + ["Revisar la escala académica: hoy quien tiene solo pregrado recibe 0"]:
+        st.markdown(f"- {p}")
+
+    st.subheader("Usos de la evidencia")
+    u = CONC["usos"]
+    c1, c2 = st.columns(2)
+    for col, k in [(c1, "curricular"), (c2, "portafolio")]:
+        with col:
+            st.markdown(f"**{u[k]['titulo']}**")
+            for e in u[k]["evidencia_disponible"]:
+                st.markdown(f"- {e['insumo']} " + (chips(e["indicadores"]) if e["indicadores"] else ""),
+                            unsafe_allow_html=True)
+    fuente(u["fuente"])
+
+    st.subheader("Plan de implementación")
+    tabla_html(pd.DataFrame([{"Fase": f["fase"], "Periodo": f["periodo"], "Producto": f["producto"]}
+                             for f in MODELO["fases"]]))
+    fuente(MODELO["fases_fuente"])
+    st.markdown("**Próximos pasos técnicos**")
+    tabla_html(pd.DataFrame(CONC["proximos_pasos"]).rename(columns={"paso": "Paso", "para": "Para qué"}))
+
+
+# ---------------------------------------------------------------------------
+# Fase 2 · Validación (propuesta)
+# ---------------------------------------------------------------------------
+def fase2():
+    encabezado("Fase 2 · nov-2026 – abr-2027 · propuesta del equipo", "Validación en contexto")
+    simple("la Fase 2 prueba el modelo en pequeño (un piloto) antes de aplicarlo a toda la "
+           "Universidad. Aquí está lo que proponemos para cada actividad de la lámina 6.")
+    rol = MODELO["rol_equipo_tecnico"]
+    st.markdown(f"**Equipo técnico:** {rol['actor']}. Roles: " + chips(rol["roles"]), unsafe_allow_html=True)
+    fuente(rol["fuente"])
+    acts = [
+        ("Aplicación piloto en programas o seccionales",
+         "Aplicar el instrumento mínimo común en 2 o 3 programas de Bogotá y una seccional, a "
+         "graduados de 1, 3 y 5 años. Incluir a quienes se gradúan en el periodo (línea base)."),
+        ("Recolección y análisis de información",
+         "Calcular los 14 indicadores y el índice con el agente de perfilado; ponderar con totales "
+         "del SNIES; comparar con los resultados de esta fase."),
+        ("Contraste con actores clave",
+         "Taller con directores de programa para leer los resultados; encuesta corta a empleadores; "
+         "grupos focales con graduados para validar las dimensiones."),
+        ("Ajustes al modelo y a los instrumentos",
+         "Definir pesos del índice con expertos y comparar con pesos iguales; corregir la escala "
+         "académica; recodificar el nivel del cargo."),
+        ("Documentación de resultados y lecciones",
+         "Actualizar las fichas técnicas con la nueva línea base y fijar metas; bitácora de decisiones."),
+    ]
+    for i, (t, d) in enumerate(acts, 1):
+        with st.container(border=True):
+            st.markdown(f"**{i}. {t}**  \n{d}")
+
+    st.subheader("Cronograma propuesto")
+    meses = ["nov", "dic", "ene", "feb", "mar", "abr"]
+    # (actividad, inicio, fin, periodo, realizada) en meses desde noviembre; diciembre y enero sin actividades.
+    gantt = [("Ajustar instrumento y diseño muestral", 0, 1, "nov", True),
+             ("Aplicación piloto", 3, 4.5, "feb – mediados de mar", False),
+             ("Análisis y ponderación", 4, 5.5, "mar – mediados de abr", False),
+             ("Contraste con actores clave", 4.5, 6, "mediados de mar – abr", False),
+             ("Ajustes y documentación", 5, 6, "abr", False)]
+    fig = go.Figure()
+    for nombre, ini, fin, periodo, hecha in gantt:
+        estado = "Realizada" if hecha else "Pendiente"
+        fig.add_bar(y=[nombre], x=[fin - ini], base=[ini], orientation="h",
+                    marker_color="#2E7D32" if hecha else SERIES,
+                    text=["✓ Realizada"] if hecha else None, textposition="inside",
+                    insidetextanchor="middle", textfont=dict(color="#fff"),
+                    hovertemplate=f"{nombre}: {periodo} · {estado}<extra></extra>")
+    fig.update_layout(height=260, showlegend=False, margin=dict(l=10, r=10, t=10, b=10),
+                      xaxis=dict(tickvals=[i + .5 for i in range(6)], ticktext=meses, range=[0, 6],
+                                 gridcolor="#EEF1F6"),
+                      yaxis=dict(autorange="reversed"), plot_bgcolor="#fff")
+    st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+    st.markdown(chips(["■ Realizada"], "ok") + chips(["■ Pendiente"]), unsafe_allow_html=True)
+
+    st.subheader("¿Cuántas respuestas necesita el piloto?")
+    c1, c2 = st.columns([1, 2])
+    margen = c1.slider("Margen de error deseado (± puntos porcentuales)", 3, 12, 7)
+    n = round(1.96 ** 2 * 0.25 / (margen / 100) ** 2)
+    c2.markdown(f'<div class="card"><p>Respuestas necesarias por grupo (programa × cohorte) para '
+                f'estimar un porcentaje con ±{margen} puntos al 95 %:</p><div class="big">{n:,}</div>'
+                f'<p>Fórmula: n = 1,96² × 0,25 / margen². Supone el caso más exigente (50 %).</p></div>'.replace(",", "."),
+                unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------------------------
+# Anexos
+# ---------------------------------------------------------------------------
+def anexo_fichas():
+    encabezado("Anexos", "Fichas técnicas de los indicadores")
+    st.markdown("Cada ficha documenta qué mide el indicador, cómo se calcula, de dónde salen los "
+                "datos, qué tan sólida es la evidencia y cuál es su línea base.")
+    if DOCX_FICHAS.exists():
+        st.download_button("Descargar las 14 fichas (Word)", DOCX_FICHAS.read_bytes(),
+                           file_name=DOCX_FICHAS.name, icon=":material/download:")
+    sel = st.selectbox("Indicador", [f["id"] for f in FICHAS],
+                       format_func=lambda k: f"{k} · {IND[k]['nombre']}")
+    f = next(x for x in FICHAS if x["id"] == sel)
+    st.markdown(f"### {f['id']} · {f['nombre']}")
+    st.markdown(chips([f["dimension"], f["aspecto"], f"Tipo: {f['tipo']}",
+                       f"Evidencia {f['evidencia']}: {f['evidencia_nombre']}"]), unsafe_allow_html=True)
+    filas = [("Pregunta que responde", f["pregunta"]), ("Definición", f["definicion"]),
+             ("Fórmula", f["formula"]), ("Unidad de medida", f["unidad"]), ("Universo", f["universo"]),
+             ("Fuentes", ", ".join(f["fuentes"])),
+             ("Variables", "\n".join(f"{v['base']} · col. {v['posicion']}: {v['pregunta']}" for v in f["variables"])),
+             ("Método de estimación", f["metodo"]), ("Desagregación", f["desagregacion"]),
+             ("Línea base", "; ".join(f"{r['etiqueta']}: {fmt(r['pct'])} % (IC 95 % {fmt(r['li'])}–{fmt(r['ls'])}; n = {r['n']})"
+                                      for r in f["linea_base"])),
+             ("Interpretación", f["interpretacion"]), ("Limitaciones", f["limitaciones"]),
+             ("Uso en el modelo", f["uso"]), ("Verificación externa", f["verificacion"]),
+             ("Periodicidad", f["periodicidad"]), ("Responsable", f["responsable"]), ("Meta", f["meta"])]
+    cuerpo = "".join(f"<tr><th>{html.escape(k)}</th><td>{html.escape(v).replace(chr(10), '<br>')}</td></tr>"
+                     for k, v in filas)
+    st.markdown(f'<table class="ficha">{cuerpo}</table>', unsafe_allow_html=True)
+    st.caption(f"Nivel de evidencia, uso, verificación, periodicidad, responsable y meta: {F.ORIGEN_PROPUESTA}.")
+
+
+def anexo_glosario():
+    encabezado("Anexos", "Glosario, límites y documentos de apoyo")
+    if DOCX_IMPACTO.exists():
+        st.download_button("Descargar: Impacto vs. transformación del graduado (Word)",
+                           DOCX_IMPACTO.read_bytes(), file_name=DOCX_IMPACTO.name,
+                           icon=":material/download:")
+    st.subheader("Límites de esta fase")
+    for l in CONC["limitaciones"]:
+        st.markdown(f"- **{l['titulo']}.** {l['texto']}")
+    st.subheader("Glosario")
+    q = st.text_input("Buscar término")
+    g = [x for x in CONC["glosario"] if not q or q.lower() in (x["termino"] + x["definicion"]).lower()]
+    tabla_html(pd.DataFrame(g).rename(columns={"termino": "Término", "definicion": "Definición",
+                                               "simple": "En palabras sencillas"}))
+
+
+# ---------------------------------------------------------------------------
+# Navegación por fases
+# ---------------------------------------------------------------------------
+pg = st.navigation({
+    "Inicio": [st.Page(inicio, title="Portada", icon=":material/home:", default=True)],
+    "Fase 0 · Formulación": [st.Page(fase0, title="Objetivos, referentes y método", icon=":material/flag:")],
+    "Fase 1 · Conceptualización y diseño": [
+        st.Page(f1_marco, title="1. Marco conceptual", icon=":material/menu_book:"),
+        st.Page(f1_dimensiones, title="2. Dimensiones, variables e indicadores", icon=":material/star:"),
+        st.Page(f1_fuentes, title="3. Fuentes de información", icon=":material/database:"),
+        st.Page(f1_instrumentos, title="4. Instrumentos y métodos", icon=":material/assignment:"),
+        st.Page(f1_diseno, title="5. Diseño del modelo y plan", icon=":material/account_tree:"),
+    ],
+    "Fase 2 · Validación": [st.Page(fase2, title="Propuesta de piloto", icon=":material/groups:")],
+    "Anexos": [st.Page(anexo_fichas, title="Fichas técnicas", icon=":material/description:"),
+               st.Page(anexo_glosario, title="Glosario y documentos", icon=":material/dictionary:")],
+})
+with st.sidebar:
+    st.markdown(f"<div style='color:{NAVY};font-weight:700'>Universidad Santo Tomás</div>"
+                "<div class='fuente'>Consultoría Estadística 2026-II<br>Dylan Fajardo · Valentina Huertas · "
+                "Manuel Molina</div>", unsafe_allow_html=True)
+pg.run()
