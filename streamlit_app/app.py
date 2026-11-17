@@ -17,6 +17,9 @@ import streamlit as st
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
 from agente import fichas as F  # noqa: E402
+from agente.textos import (ACTIVIDADES_FASE2, CRONOGRAMA_FASE2, DIMENSIONES,  # noqa: E402
+                           FUENTES_EXTERNAS, INSTRUMENTO, METODOS, PALETA_VEREDICTO,
+                           SIGNIFICADO_VEREDICTO)
 
 RESULTADOS = F.config.CARPETA_ENTREGABLES
 DOCX_FICHAS = RESULTADOS / "Fichas_Tecnicas_Indicadores.docx"
@@ -25,17 +28,6 @@ DOCX_IMPACTO = RESULTADOS / "Impacto_vs_Transformacion_del_Graduado.docx"
 NAVY, NAVY2, GOLD, SERIES, GRIS = "#0A2557", "#123C7C", "#F2B705", "#1F5FBF", "#B8C2D3"
 NOMBRE_CORTO = {"penser": "PENSER 2025", "percepcion": "Percepción 2022", "formulario": "Formulario 2023–26"}
 ORDEN_COH = ["Hasta 2010", "2011–2015", "2016–2018", "2019–2021", "2022–2024", "2022"]
-DIMENSIONES = {
-    "Social": {"icono": "🤝", "que": "Cambios en la posición social y económica: estrato, ingresos, "
-               "llegar más lejos que los padres y participar en la comunidad."},
-    "Profesional": {"icono": "💼", "que": "Cómo entra y avanza en el trabajo: rapidez para emplearse, "
-                    "estabilidad y relación del empleo con lo que estudió."},
-    "Personal": {"icono": "🌱", "que": "Calidad de vida y bienestar después del título, y lo que el "
-                 "graduado siente que la formación le aportó."},
-    "Académica": {"icono": "🎓", "que": "Si sigue formándose después del grado: posgrados y otros títulos."},
-    "Relación con la Universidad": {"icono": "🏛️", "que": "El vínculo con la USTA: recomendación e "
-                                    "interés en volver a estudiar. No mide transformación; alimenta el portafolio."},
-}
 
 st.set_page_config(page_title="Modelo de Transformación del Graduado · USTA", page_icon="🎓",
                    layout="wide")
@@ -441,10 +433,7 @@ def _variables():
 
     # Veredicto por base
     orden = F.ORDEN_VEREDICTO
-    paleta = {"Sirve: ya se usa": GOLD, "Sirve: disponible": SERIES, "Sirve con reservas": "#7FA6E0",
-              "Sirve: para desagregar": "#0E7C86", "Sirve: para describir": "#8FC6CB",
-              "Sirve: para el portafolio": "#2E7D32", "No se usa: control": "#C9CED8",
-              "No se usa: dato personal": "#B23B3B", "Revisar": "#999"}
+    paleta = PALETA_VEREDICTO
     nb = NOMBRE_CORTO
     tab = DIC.groupby(["base", "veredicto"]).size().unstack(fill_value=0)
     fig = go.Figure()
@@ -458,16 +447,7 @@ def _variables():
     st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 
     with st.expander("¿Qué significa cada veredicto?", expanded=False):
-        expl = {
-            "Sirve: ya se usa": "Alimenta uno de los 14 indicadores o el índice.",
-            "Sirve: disponible": "Mide transformación (tiene un antes, un ahora o un cambio) pero aún no está en un indicador.",
-            "Sirve con reservas": "Es percepción de lo que aportó la formación, o texto abierto que hay que codificar.",
-            "Sirve: para desagregar": "Sede o año de grado: permite cortar los resultados por grupos.",
-            "Sirve: para describir": "Caracteriza al graduado o su contexto (edad, territorio, programa).",
-            "Sirve: para el portafolio": "Dice qué servicios o formación demanda el graduado.",
-            "No se usa: control": "Consentimiento o metadatos del formulario.",
-            "No se usa: dato personal": "Nombre, documento, correo, teléfono o empresa. Excluida (Ley 1581 de 2012).",
-        }
+        expl = SIGNIFICADO_VEREDICTO
         tabla_html(pd.DataFrame([{"Veredicto": k, "Significado": v,
                                   "Variables": int((DIC["veredicto"] == k).sum())} for k, v in expl.items()]))
 
@@ -628,35 +608,13 @@ def f1_fuentes():
     st.caption("Los cruces se hicieron con huellas cifradas (SHA-256): ningún documento ni correo sale del equipo.")
     st.subheader("Fuentes que el modelo pide y aún no están")
     st.markdown("La lámina 2 pide triangular con empleadores y fuentes externas. Propuesta para la Fase 2:")
-    tabla_html(pd.DataFrame([
-        {"Fuente": "Empleadores", "Para qué": "Valorar el desempeño del graduado (hoy nivel D: no hay base)", "Cómo": "Encuesta corta; reutilizar instrumentos del IMS 2019"},
-        {"Fuente": "Observatorio Laboral para la Educación (MEN)", "Para qué": "Vinculación formal e ingreso de los graduados", "Cómo": "Solicitud institucional / convenio"},
-        {"Fuente": "SNIES / registro de graduados USTA", "Para qué": "Totales para ponderar y verificar títulos de posgrado", "Cómo": "Solicitud a la Dirección de Graduados"},
-        {"Fuente": "RUES y CvLAC", "Para qué": "Verificar emprendimientos, gremios e investigación", "Cómo": "Consulta pública, con consentimiento"},
-        {"Fuente": "DANE, SECOP", "Para qué": "Contexto territorial y contratación pública", "Cómo": "Datos abiertos"},
-    ]))
+    tabla_html(pd.DataFrame(FUENTES_EXTERNAS, columns=["Fuente", "Para qué", "Cómo"]))
     fuente("Modelo 2026, lámina 2 (fuentes); propuesta del equipo (uso y forma de acceso).")
 
 
 # ---------------------------------------------------------------------------
 # Fase 1 · 4. Instrumentos y métodos
 # ---------------------------------------------------------------------------
-INSTRUMENTO = [
-    ("Identificación", "Huella cifrada del documento, programa, sede, fecha de grado", "—",
-     "Llave estable para seguir a la misma persona (hoy solo 89 coinciden entre bases)", "Todos"),
-    ("Social", "Estrato al graduarse / estrato actual", "1 a 6", "Igual que Percepción", "SOC-01, índice"),
-    ("Social", "Máximo nivel educativo de la madre y del padre", "Categorías de PENSER", "Unifica las dos versiones actuales", "SOC-02"),
-    ("Social", "Ingreso mensual al graduarse / actual", "Rangos en SMMLV", "Hoy solo hay «¿es mayor?» (sí/no)", "SOC-03"),
-    ("Profesional", "Situación laboral al graduarse / actual", "Empleado, independiente, buscando, inactivo", "Misma escala en las tres bases", "PRO-01, PRO-04"),
-    ("Profesional", "Tiempo hasta el primer empleo", "Categorías de Percepción", "Sin cambios", "PRO-01, índice"),
-    ("Profesional", "Tipo de contrato del primer empleo / actual", "6 categorías cerradas", "Hoy 22 variantes de texto", "PRO-03"),
-    ("Profesional", "Correspondencia del empleo con la formación, primero / actual", "0 a 5", "Sin cambios", "PRO-02, índice"),
-    ("Profesional", "Nivel del cargo, primero / actual", "Operativo, profesional, coordinación, dirección", "Hoy en texto libre: no medible", "Nuevo: desarrollo profesional"),
-    ("Personal", "Seis mejoras de bienestar después del título", "Sí / No", "Sin cambios", "PER-01, índice"),
-    ("Académica", "Máximo nivel de estudios y estudios en curso", "Niveles SNIES", "Unifica PENSER y Percepción", "ACA-01, índice"),
-    ("Académica / Social", "Investigación, proyectos comunitarios, gremios, distinciones", "Sí / No + año", "El año permite saber si fue después del grado", "ACA-02"),
-    ("Relación", "Recomendación del programa e interés en formación continua", "0 a 10 / Sí-No", "Sin cambios", "REL-01, REL-02"),
-]
 
 
 def f1_instrumentos():
@@ -665,15 +623,7 @@ def f1_instrumentos():
            "momentos</b>. Hoy cada encuesta pregunta distinto. Proponemos un módulo mínimo común "
            "para todas las encuestas futuras y los métodos para analizarlo.")
     st.subheader("Métodos de análisis")
-    tabla_html(pd.DataFrame([
-        {"Método": "Proporción con intervalo de Wilson (95 %)", "Para qué sirve": "Dar cada porcentaje con su margen de error, también en grupos pequeños", "Dónde se usa": "Los 14 indicadores"},
-        {"Método": "Matriz de transición", "Para qué sirve": "Ver de dónde venían y a dónde llegaron", "Dónde se usa": "Estrato, contrato, correspondencia empleo–formación"},
-        {"Método": "Preguntas retrospectivas", "Para qué sirve": "Obtener el «antes» en la misma encuesta", "Dónde se usa": "Estrato al graduarse, primer empleo"},
-        {"Método": "Pseudo-panel por cohortes", "Para qué sirve": "Aproximar el efecto del tiempo comparando promociones", "Dónde se usa": "Desgloses por cohorte"},
-        {"Método": "Índice formativo (0–100)", "Para qué sirve": "Resumir cuatro dimensiones en un número", "Dónde se usa": "Prototipo de índice"},
-        {"Método": "Análisis factorial (pendiente)", "Para qué sirve": "Validar las escalas de competencias", "Dónde se usa": "Fase 2"},
-        {"Método": "Ponderación por raking (pendiente)", "Para qué sirve": "Corregir que respondan más unos grupos que otros", "Dónde se usa": "Fase 2, con totales del SNIES"},
-    ]))
+    tabla_html(pd.DataFrame(METODOS, columns=["Método", "Para qué sirve", "Dónde se usa"]))
     st.subheader("Instrumento mínimo común (propuesta)")
     st.markdown("Preguntas que toda encuesta de graduados de la USTA debería incluir, con la misma "
                 "redacción y escala, para que los indicadores se puedan calcular igual cada año.")
@@ -772,34 +722,14 @@ def fase2():
     rol = MODELO["rol_equipo_tecnico"]
     st.markdown(f"**Equipo técnico:** {rol['actor']}. Roles: " + chips(rol["roles"]), unsafe_allow_html=True)
     fuente(rol["fuente"])
-    acts = [
-        ("Aplicación piloto en programas o seccionales",
-         "Aplicar el instrumento mínimo común en 2 o 3 programas de Bogotá y una seccional, a "
-         "graduados de 1, 3 y 5 años. Incluir a quienes se gradúan en el periodo (línea base)."),
-        ("Recolección y análisis de información",
-         "Calcular los 14 indicadores y el índice con el agente de perfilado; ponderar con totales "
-         "del SNIES; comparar con los resultados de esta fase."),
-        ("Contraste con actores clave",
-         "Taller con directores de programa para leer los resultados; encuesta corta a empleadores; "
-         "grupos focales con graduados para validar las dimensiones."),
-        ("Ajustes al modelo y a los instrumentos",
-         "Definir pesos del índice con expertos y comparar con pesos iguales; corregir la escala "
-         "académica; recodificar el nivel del cargo."),
-        ("Documentación de resultados y lecciones",
-         "Actualizar las fichas técnicas con la nueva línea base y fijar metas; bitácora de decisiones."),
-    ]
+    acts = ACTIVIDADES_FASE2
     for i, (t, d) in enumerate(acts, 1):
         with st.container(border=True):
             st.markdown(f"**{i}. {t}**  \n{d}")
 
     st.subheader("Cronograma propuesto")
     meses = ["nov", "dic", "ene", "feb", "mar", "abr"]
-    # (actividad, inicio, fin, periodo, realizada) en meses desde noviembre; diciembre y enero sin actividades.
-    gantt = [("Ajustar instrumento y diseño muestral", 0, 1, "nov", True),
-             ("Aplicación piloto", 3, 4.5, "feb – mediados de mar", False),
-             ("Análisis y ponderación", 4, 5.5, "mar – mediados de abr", False),
-             ("Contraste con actores clave", 4.5, 6, "mediados de mar – abr", False),
-             ("Ajustes y documentación", 5, 6, "abr", False)]
+    gantt = CRONOGRAMA_FASE2
     fig = go.Figure()
     for nombre, ini, fin, periodo, hecha in gantt:
         estado = "Realizada" if hecha else "Pendiente"
