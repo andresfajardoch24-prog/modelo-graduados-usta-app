@@ -774,6 +774,39 @@ def _lista(txt: str) -> str:
     return "<br>".join(html.escape(x) for x in txt.split("\n"))
 
 
+def _nota(titulo: str, texto: str):
+    st.markdown(f'<div class="simple"><b>{titulo}</b> {texto}</div>', unsafe_allow_html=True)
+
+
+def _q_resumen():
+    """Lectura de un minuto: problema, ejemplo concreto y propuesta."""
+    st.subheader("La idea en un minuto")
+    pasos = [("1 · Hoy", "Hay <b>tres encuestas</b> a graduados (PENSER 2025, Percepción 2022 y el formulario "
+                         "de actualización), hechas en momentos y sedes distintas."),
+             ("2 · El problema", "Preguntan lo mismo <b>con palabras y opciones distintas</b>. Es como medir "
+                                 "con una regla en centímetros y otra en pulgadas: los números no se pueden sumar."),
+             ("3 · La propuesta", "Un <b>núcleo de preguntas idéntico</b> en todas las sedes, más módulos que cada "
+                                  "sede puede agregar al final si los necesita."),
+             ("4 · Lo que se gana", "Comparar sedes, programas y cohortes <b>con la misma regla</b>, y ver cómo "
+                                    "cambia la vida del graduado con el tiempo.")]
+    cols = st.columns(4)
+    for col, (t, d) in zip(cols, pasos):
+        with col:
+            card(t, d)
+    st.write("")
+    with st.expander("Ver un ejemplo real del problema: cómo se pregunta hoy el ingreso", expanded=True):
+        cols = st.columns(len(Q.EJEMPLO_INGRESO) + 1)
+        for col, (base, como, prob) in zip(cols, Q.EJEMPLO_INGRESO):
+            with col:
+                card(base, html.escape(como), f"✗ {html.escape(prob)}")
+        with cols[-1]:
+            st.markdown('<div class="card" style="border:2px solid #2E7D32"><h4>Propuesta (C03 y C04)</h4>'
+                        "<p>Dos preguntas con <b>los mismos rangos en salarios mínimos</b>: el ingreso en el "
+                        "último año de estudios y el ingreso actual.</p>"
+                        '<div class="fuente" style="color:#1E6B3C">✓ Se ve si mejoró y cuánto, y se compara '
+                        "entre años y sedes.</div></div>", unsafe_allow_html=True)
+
+
 def f2_cuestionario():
     n_total, n_pre = Q.total_preguntas(), Q.N_PRECARGADAS
     encabezado("Fase 2 · Validación · propuesta del equipo", "Cuestionario común multisede")
@@ -781,6 +814,8 @@ def f2_cuestionario():
            "sumar ni comparar entre sedes. Proponemos un <b>núcleo de preguntas idéntico en todas las "
            "sedes</b> (mismo texto, orden, opciones y códigos), más módulos opcionales que cada sede "
            "añade al final.")
+    _q_resumen()
+    st.subheader("El cuestionario en cifras")
     cols = st.columns(4)
     for col, (num, txt) in zip(cols, [(n_total, f"preguntas en el núcleo ({n_pre} precargadas del registro)"),
                                       (n_total - n_pre, "las responde el graduado: 15 a 18 minutos"),
@@ -797,8 +832,12 @@ def f2_cuestionario():
         d2.download_button("Descargar en PDF", PDF_CUESTIONARIO.read_bytes(),
                            file_name=PDF_CUESTIONARIO.name, icon=":material/picture_as_pdf:")
 
-    t1, t2, t3, t4, t5, t6 = st.tabs(["① Núcleo común", "② Módulos opcionales", "③ Escalas estándar",
-                                      "④ Trazabilidad", "⑤ Qué cambia", "⑥ Protocolo y piloto"])
+    st.subheader("Explore la propuesta")
+    st.caption("Recorra las pestañas en orden. Cada una empieza con una explicación corta; si encuentra una "
+               "palabra técnica, búsquela en la pestaña ⑦ Glosario.")
+    t1, t2, t3, t4, t5, t6, t7 = st.tabs(["① Núcleo común", "② Módulos opcionales", "③ Escalas estándar",
+                                          "④ Trazabilidad", "⑤ Qué cambia", "⑥ Protocolo y piloto",
+                                          "⑦ Glosario"])
     with t1:
         _q_nucleo()
     with t2:
@@ -808,19 +847,56 @@ def f2_cuestionario():
     with t4:
         _q_traza()
     with t5:
-        st.markdown("Preguntas de los estudios actuales que no pasan al núcleo tal como están, y su reemplazo.")
+        _nota("¿Qué es esta lista?", "Preguntas de los estudios actuales que no pasan al núcleo tal como están. "
+              "Se cambian por una de tres razones: <b>no se pueden comparar</b> (escalas o rangos distintos), "
+              "<b>dan demasiado trabajo</b> (decenas de columnas casi vacías) o <b>exponen datos personales</b> "
+              "sin necesidad (documento, nombre de la empresa en texto libre).")
         tabla_html(pd.DataFrame(Q.REEMPLAZOS, columns=["Pregunta actual", "Propuesta"]))
     with t6:
         _q_protocolo()
+    with t7:
+        busca = st.text_input("Buscar término", key="glosario_cuestionario")
+        g = [x for x in Q.GLOSARIO if not busca or busca.lower() in (x[0] + x[1]).lower()]
+        for termino, definicion in g:
+            st.markdown(f"**{termino}.** {definicion}")
+        if not g:
+            st.caption("No hay términos con esa búsqueda.")
 
 
 def _q_nucleo():
-    st.markdown("**Pares «antes / ahora».** La misma pregunta referida al grado y al presente: así se "
-                "observa la transformación aunque la persona responda una sola vez.")
+    _nota("¿Qué es el núcleo?", "Las preguntas obligatorias, iguales en todas las sedes. Están ordenadas en "
+          "ocho secciones (A a H), del dato más simple (de qué programa se graduó) al más personal (qué le "
+          "aportó la Universidad).")
+    st.markdown("**La clave: pares «antes / ahora».** Se hace la misma pregunta dos veces, una sobre el momento "
+                "del grado y otra sobre el presente. Así se observa la transformación aunque la persona "
+                "responda una sola vez.")
     cols = st.columns(len(PARES_ANTES_AHORA))
     for col, (t, a, b) in zip(cols, PARES_ANTES_AHORA):
         with col:
             card(t, f"<b>{a}</b> al grado → <b>{b}</b> hoy")
+    st.write("")
+    with st.expander("Ejemplo: así se leerían las respuestas de un graduado (caso ficticio)"):
+        mejoro, igual = chips(["↑ Mejoró"], "ok"), chips(["= Igual"])
+        filas = "".join(
+            f"<tr><td>{html.escape(t)}</td><td>{html.escape(a)}</td><td>{html.escape(b)}</td>"
+            f"<td>{mejoro if m else igual}</td></tr>"
+            for t, a, b, m in Q.EJEMPLO_GRADUADO)
+        st.markdown('<table class="ficha"><tr><th>Tema</th><th>Al graduarse</th><th>Hoy</th><th>Lectura</th></tr>'
+                    f"{filas}</table>", unsafe_allow_html=True)
+        st.markdown("Una sola persona no dice mucho. Pero al **sumar cientos de respuestas** con las mismas "
+                    "preguntas se obtienen los indicadores del modelo; por ejemplo, *«qué porcentaje de los "
+                    "graduados de 2022 subió al menos un estrato»* (SOC-01), y se puede comparar ese "
+                    "porcentaje entre sedes y programas.")
+        st.caption("Datos inventados solo para explicar; no corresponden a ninguna persona.")
+    with st.expander("¿Cómo leer cada tarjeta de pregunta?"):
+        st.markdown(f"- {chips(['C01'], 'gold')} **Código**: el nombre fijo de la pregunta. Es igual en todas "
+                    "las sedes y es el nombre de la columna en la base de datos.\n"
+                    f"- {chips(['Social'])} **Dimensión** del modelo a la que aporta (personal, profesional, "
+                    "social, académica o relación con la USTA).\n"
+                    "- **Texto en negrita**: la pregunta tal como la lee el graduado.\n"
+                    "- **A la derecha**: las opciones de respuesta, con su número.\n"
+                    "- **Origen**: de qué encuesta actual viene. **Alimenta**: el indicador que calcula.",
+                    unsafe_allow_html=True)
     st.write("")
     busca = st.text_input("Buscar en todas las preguntas", placeholder="p. ej. ingreso, estrato, competencias")
     if busca:
@@ -831,6 +907,9 @@ def _q_nucleo():
         secciones = {f"{s[0]} · {s[1]}": s for s in Q.NUCLEO}
         sel = st.radio("Sección", list(secciones), horizontal=True, label_visibility="collapsed")
         letra, _, nota, _ = secciones[sel]
+        para, ejemplo = Q.PARA_QUE[letra]
+        _nota("¿Para qué sirve esta sección?", f"{html.escape(para)}<br><b>Ejemplo de uso:</b> "
+              f"<i>{html.escape(ejemplo)}</i>")
         st.caption(nota)
         lista = [p for p in Q.preguntas() if p["seccion"] == letra]
     for p in lista:
@@ -845,8 +924,10 @@ def _q_nucleo():
 
 
 def _q_modulos():
-    st.markdown("Cada sede elige los módulos que necesita. Si aplica uno, usa el texto tal como está, "
-                "para que también sea comparable entre las sedes que lo usen.")
+    _nota("¿Qué es un módulo?", "Un bloque de preguntas extra sobre un tema que no le interesa a todas las "
+          "sedes por igual; por ejemplo, una sede con muchos graduados fuera del país usaría M1. Es como un "
+          "menú: cada sede elige los que necesita y los pone <b>después</b> del núcleo, sin cambiar su texto. "
+          "Así también se pueden comparar las sedes que usen el mismo módulo.")
     for i in range(0, len(Q.MODULOS), 2):
         cols = st.columns(2)
         for col, (cod, titulo, origen, uso, items) in zip(cols, Q.MODULOS[i:i + 2]):
@@ -857,6 +938,10 @@ def _q_modulos():
 
 
 def _q_escalas():
+    _nota("¿Qué es una escala y por qué unificarla?", "La escala es el conjunto de opciones de respuesta. Hoy "
+          "una encuesta pregunta de 1 a 4, otra de 1 a 5 y otra solo Sí/No sobre el mismo tema, y así un "
+          "«4» no significa lo mismo en todas. La propuesta usa <b>pocas escalas fijas</b>: cada tipo de "
+          "pregunta tiene siempre las mismas opciones.")
     filas = [("Nivel (contribución, correspondencia, satisfacción)", Q.NIVEL), ("Acuerdo (afirmaciones)", Q.ACUERDO),
              ("Incidencia (E04)", Q.INCIDENCIA), ("Ingreso (C03, C04)", Q.SMMLV),
              ("Códigos especiales (todas)", "97 No sabe\n98 Prefiero no responder\n99 No aplica\nVacío = salto")]
@@ -868,12 +953,29 @@ def _q_escalas():
     st.markdown('<div class="simple"><b>¿Por qué en SMMLV?</b> Los rangos en pesos pierden vigencia con la '
                 "inflación (Percepción usa pesos de 2022). En salarios mínimos, las cohortes y los años se "
                 "comparan entre sí. C03 es retrospectiva y tiene sesgo de recuerdo.</div>", unsafe_allow_html=True)
+    _nota("¿Por qué los códigos 97, 98 y 99?", "No es lo mismo «no sé» que «no quiero responder» o «no me "
+          "aplica» (por ejemplo, preguntar por el cargo a quien no trabaja). Si se mezclan con las respuestas "
+          "reales, los promedios y porcentajes se distorsionan; con códigos aparte se pueden excluir del "
+          "cálculo y, a la vez, contar cuántas personas no respondieron.")
 
 
 def _q_traza():
-    st.markdown("Cada pregunta del núcleo, con la dimensión del modelo, el indicador que alimenta y si "
-                "existe en las bases históricas.")
+    _nota("¿Qué muestra esta pestaña?", "Para cada pregunta del núcleo: a qué dimensión del modelo aporta, qué "
+          "indicador alimenta y si ya existe en alguna de las tres encuestas actuales. Sirve para saber qué "
+          "datos históricos se pueden aprovechar y cuáles empiezan desde cero.")
+    st.markdown(f"{chips(['✓'], 'ok')} la base ya tiene esa pregunta, igual o casi igual · "
+                f"{chips(['≈'], 'gold')} tiene algo parecido que se puede convertir (recodificar) · "
+                f"{chips(['—'])} no la tiene.", unsafe_allow_html=True)
     bases = ["PENSER 2025", "Percepción 2022", "Formulario 2023–26"]
+    n = len(Q.TRAZA)
+    usable = [sum(1 for v in Q.TRAZA.values() if v[2 + i] != "—") for i in range(3)]
+    en_las_tres = sum(1 for v in Q.TRAZA.values() if all(m != "—" for m in v[2:]))
+    nuevas = sum(1 for v in Q.TRAZA.values() if all(m == "—" for m in v[2:]))
+    mejor = max(range(3), key=lambda i: usable[i])
+    _nota("Cómo leer el gráfico:", f"la base más cercana al núcleo es <b>{bases[mejor]}</b>, que tiene de "
+          f"alguna forma {usable[mejor]} de las {n} preguntas. Solo <b>{en_las_tres}</b> aparecen en las tres "
+          f"bases a la vez, y {nuevas} {'no está' if nuevas == 1 else 'no están'} en ninguna. Por eso hoy "
+          "solo una parte pequeña de la información se puede comparar entre las tres encuestas.")
     fig = go.Figure()
     for marca in ["✓", "≈", "—"]:
         cuenta = [sum(1 for v in Q.TRAZA.values() if v[2 + i] == marca) for i in range(3)]
@@ -908,14 +1010,41 @@ def _q_protocolo():
                              "de menos de 5 personas.")]):
         with col:
             card(t, d)
+    st.subheader("¿A quién se le pregunta cada año?")
+    _nota("La idea:", "cada graduado responde <b>tres veces</b>: al año, a los tres y a los cinco años de "
+          "graduarse. Así se ve cómo evoluciona la misma persona, y cada año se encuesta a tres grupos a la vez.")
+    fig = go.Figure()
+    colores = [SERIES, GOLD, "#2E7D32"]
+    fig.add_vrect(x0=2030.6, x1=2031.4, fillcolor="#FFF4D1", line_width=0, layer="below")
+    for (cohorte, color) in zip([2026, 2028, 2030], colores):
+        anios = [cohorte + k for k in (1, 3, 5)]
+        fig.add_scatter(x=anios, y=[f"Graduados {cohorte}"] * 3, mode="lines+markers+text",
+                        line=dict(color=color, width=2, dash="dot"), marker=dict(size=16, color=color),
+                        text=["1 año", "3 años", "5 años"], textposition="top center",
+                        hovertemplate=f"Graduados {cohorte} · encuesta de %{{x}}<extra></extra>",
+                        showlegend=False)
+    fig.update_layout(height=270, margin=dict(l=10, r=10, t=10, b=10), plot_bgcolor="#fff",
+                      xaxis=dict(dtick=1, title="Año en que responden la encuesta", gridcolor="#EEF1F6"),
+                      yaxis=dict(range=[2.4, -0.7]))
+    st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+    st.caption("Calendario ilustrativo con tres cohortes. En 2031 (franja amarilla) responden a la vez los "
+               "graduados de 2030 (1 año), 2028 (3 años) y 2026 (5 años).")
     st.subheader("Ruta de validación del cuestionario")
+    _nota("¿Por qué validar?", "Antes de usarlo en todas las sedes hay que comprobar que las preguntas se "
+          "entienden, que no toma demasiado tiempo y que mide lo que dice medir. Son cinco pasos, del más "
+          "sencillo al más técnico.")
     tabla_html(pd.DataFrame([
-        ("1. Revisión de expertos", "Experto temático y directores de graduados de cada sede revisan redacción y pertinencia.", "Versión 0.9"),
-        ("2. Prueba cognitiva", "10 a 15 graduados por sede responden en voz alta para detectar preguntas confusas.", "Ajustes de redacción"),
-        ("3. Piloto en dos o más sedes", "Aplicación real a una cohorte: tiempo, abandono y vacíos por pregunta.", "Base piloto"),
-        ("4. Validación estadística", "Alfa de Cronbach y análisis factorial confirmatorio de E03; consistencia de los pares antes/ahora.", "Informe técnico"),
-        ("5. Cierre", "Se congela el núcleo y se publica el diccionario de datos.", "Instrumento v1.0 (Fase 3)"),
-    ], columns=["Paso", "Qué se hace", "Producto"]))
+        ("1. Revisión de expertos", "Experto temático y directores de graduados de cada sede revisan redacción y pertinencia.",
+         "Personas que conocen el tema leen las preguntas y proponen mejoras.", "Versión 0.9"),
+        ("2. Prueba cognitiva", "10 a 15 graduados por sede responden en voz alta para detectar preguntas confusas.",
+         "Se escucha cómo entiende la gente cada pregunta.", "Ajustes de redacción"),
+        ("3. Piloto en dos o más sedes", "Aplicación real a una cohorte: tiempo, abandono y vacíos por pregunta.",
+         "Un ensayo general antes del estreno.", "Base piloto"),
+        ("4. Validación estadística", "Alfa de Cronbach y análisis factorial confirmatorio de E03; consistencia de los pares antes/ahora.",
+         "Se comprueba con números que las respuestas son coherentes.", "Informe técnico"),
+        ("5. Cierre", "Se congela el núcleo y se publica el diccionario de datos.",
+         "Se fija la versión oficial y ya no se cambia sin control.", "Instrumento v1.0 (Fase 3)"),
+    ], columns=["Paso", "Qué se hace", "En palabras sencillas", "Producto"]))
     st.caption("El tamaño de muestra por grupo se calcula en la página «Propuesta de piloto». "
                "Las cohortes de 1, 3 y 5 años son propuesta del equipo; el Manual para estudios de seguimiento "
                "a graduados (sección 5.1.6) respalda el panel para observar el cambio individual.")

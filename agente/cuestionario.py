@@ -259,6 +259,74 @@ REEMPLAZOS = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Lectura sencilla (solo para la página Streamlit; el Word no los usa)
+# ---------------------------------------------------------------------------
+# Sección -> (para qué sirve, qué permitirá decir)
+PARA_QUE = {
+    "A": ("Saber de qué sede, programa y año es cada graduado.",
+          "Separar los resultados: «graduados de Bucaramanga de 2021 frente a los de Tunja de 2021»."),
+    "B": ("Conocer el punto de partida de la persona y de su familia.",
+          "«¿Qué parte de nuestros graduados es la primera generación universitaria de su familia?»"),
+    "C": ("Comparar cómo vivía la persona al graduarse y cómo vive hoy.",
+          "«¿Qué parte de los graduados subió de estrato o de ingreso desde que se graduó?»"),
+    "D": ("Seguir el camino laboral: el primer empleo frente al empleo actual.",
+          "«¿Cuánto tardan en conseguir trabajo y ese trabajo tiene que ver con lo que estudiaron?»"),
+    "E": ("Recoger lo que el graduado atribuye a su formación en la USTA.",
+          "«¿Qué competencias sienten los graduados que la Universidad les ayudó a desarrollar?»"),
+    "F": ("Saber si la persona siguió estudiando después del título.",
+          "«¿Qué parte de los graduados hizo un posgrado, y dónde?»"),
+    "G": ("Registrar logros y participación social después del grado.",
+          "«¿Cuántos han creado empresa, recibido premios o liderado proyectos comunitarios?»"),
+    "H": ("Conocer la relación actual del graduado con la Universidad.",
+          "Diseñar el portafolio de servicios: qué cursos ofrecer y por qué medio avisar."),
+}
+
+# Un mismo tema (el ingreso) preguntado de tres formas: (base, cómo pregunta, problema)
+EJEMPLO_INGRESO = [
+    ("PENSER 2025", "«¿Su ingreso actual es superior al de su último año de estudio?» Sí / No",
+     "Dice si mejoró, pero no cuánto."),
+    ("Percepción 2022", "Rangos de salario en pesos de 2022, distintos según el nivel de formación",
+     "Los pesos de 2022 pierden valor con la inflación y los rangos no coinciden entre niveles."),
+    ("Formulario 2023–26", "Solo el ingreso actual, en rangos",
+     "No pregunta por el ingreso al graduarse: no se puede ver el cambio."),
+]
+
+# Graduado ficticio para explicar los pares antes/ahora: (tema, al grado, hoy, ¿mejoró?)
+EJEMPLO_GRADUADO = [
+    ("Estrato (C01 → C02)", "2", "3", True),
+    ("Ingreso (C03 → C04)", "De 1 a 2 SMMLV", "De 3 a 4 SMMLV", True),
+    ("Nivel del cargo (D04 → D07)", "Asistencial", "Profesional", True),
+    ("Correspondencia con lo estudiado (D05 → D09)", "3 Medio", "4 Alto", True),
+    ("Nivel educativo (A02 → F01)", "Profesional", "Profesional", False),
+]
+
+GLOSARIO = [
+    ("Núcleo común", "Las preguntas que todas las sedes hacen exactamente igual. Es lo que permite comparar."),
+    ("Módulo opcional", "Bloque extra que una sede agrega si le interesa un tema. Va siempre después del núcleo."),
+    ("Pregunta precargada", "Dato que la Universidad ya tiene (sede, programa, año de grado). El graduado solo lo confirma."),
+    ("Par «antes / ahora»", "La misma pregunta hecha dos veces: cómo estaba al graduarse y cómo está hoy."),
+    ("Pregunta retrospectiva", "Pide recordar una situación pasada. Es útil, pero la memoria puede fallar (sesgo de recuerdo)."),
+    ("SMMLV", "Salario mínimo mensual legal vigente. Medir el ingreso en salarios mínimos evita que la inflación "
+              "distorsione la comparación entre años."),
+    ("Cohorte", "Grupo de personas que se graduaron en el mismo año o periodo."),
+    ("Escala de respuesta", "Las opciones de una pregunta, por ejemplo de 1 «Muy bajo» a 5 «Muy alto»."),
+    ("Indicador", "Cifra que resume un aspecto de la transformación; por ejemplo, el % de graduados que subió de estrato (SOC-01)."),
+    ("Trazabilidad", "Poder decir de dónde viene cada pregunta y para qué indicador sirve."),
+    ("Identificador seudonimizado", "Código que reemplaza el documento de identidad: une las respuestas de una misma "
+                                    "persona en distintos años sin revelar quién es."),
+    ("Panel", "Seguimiento a las mismas personas en el tiempo, preguntándoles varias veces."),
+    ("Prueba cognitiva", "Algunos graduados responden en voz alta para detectar preguntas que se entienden mal."),
+    ("Alfa de Cronbach", "Mide si un grupo de preguntas sobre un mismo tema se responde de forma coherente. "
+                         "Va de 0 a 1; desde 0,7 suele considerarse aceptable."),
+    ("Análisis factorial confirmatorio", "Prueba estadística de que las preguntas se agrupan como se espera "
+                                         "(por ejemplo, las 16 competencias de E03)."),
+    ("SNIES · DIVIPOLA · CIIU", "Listas oficiales de Colombia: de programas académicos, de municipios y de sectores "
+                                "económicos. Usarlas evita respuestas escritas a mano que luego no coinciden."),
+    ("Ley 1581 de 2012", "Ley colombiana de protección de datos personales: exige consentimiento y cuidado con la información."),
+]
+
+
 def preguntas():
     """Lista plana del núcleo: dicts con sección y campos de cada pregunta."""
     return [{"seccion": letra, "titulo_seccion": titulo, "codigo": cod, "pregunta": p,
