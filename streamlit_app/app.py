@@ -16,6 +16,7 @@ import streamlit as st
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
+from agente import cuestionario as Q  # noqa: E402
 from agente import fichas as F  # noqa: E402
 from agente.textos import (ACTIVIDADES_FASE2, CRONOGRAMA_FASE2, DIMENSIONES,  # noqa: E402
                            FUENTES_EXTERNAS, INSTRUMENTO, METODOS, PALETA_VEREDICTO,
@@ -24,6 +25,8 @@ from agente.textos import (ACTIVIDADES_FASE2, CRONOGRAMA_FASE2, DIMENSIONES,  # 
 RESULTADOS = F.config.CARPETA_ENTREGABLES
 DOCX_FICHAS = RESULTADOS / "Fichas_Tecnicas_Indicadores.docx"
 DOCX_IMPACTO = RESULTADOS / "Impacto_vs_Transformacion_del_Graduado.docx"
+DOCX_CUESTIONARIO = RESULTADOS / "Modelo_Cuestionario_Comun_Graduados.docx"
+PDF_CUESTIONARIO = RESULTADOS / "Modelo_Cuestionario_Comun_Graduados.pdf"
 
 NAVY, NAVY2, GOLD, SERIES, GRIS = "#0A2557", "#123C7C", "#F2B705", "#1F5FBF", "#B8C2D3"
 NOMBRE_CORTO = {"penser": "PENSER 2025", "percepcion": "Percepción 2022", "formulario": "Formulario 2023–26"}
@@ -639,6 +642,8 @@ def f1_instrumentos():
             card(t, d)
     st.caption("Propuesta del equipo. Con la misma persona medida en varios momentos (panel) se "
                "pasa de comparar promociones a seguir trayectorias reales.")
+    st.page_link(PAGINA_CUESTIONARIO, label="Ver el cuestionario común completo (Fase 2)",
+                 icon=":material/arrow_forward:")
 
 
 # ---------------------------------------------------------------------------
@@ -756,6 +761,167 @@ def fase2():
 
 
 # ---------------------------------------------------------------------------
+# Fase 2 · Cuestionario común multisede (propuesta)
+# ---------------------------------------------------------------------------
+PARES_ANTES_AHORA = [("Estrato", "C01", "C02"), ("Ingreso en SMMLV", "C03", "C04"),
+                     ("Nivel del cargo", "D04", "D07"), ("Correspondencia empleo–formación", "D05", "D09"),
+                     ("Nivel educativo", "A02", "F01")]
+COLOR_COMPARA = {"✓": "#2E7D32", "≈": GOLD, "—": GRIS}
+NOMBRE_COMPARA = {"✓": "✓ Igual o casi igual", "≈": "≈ Recodificable", "—": "— No existe"}
+
+
+def _lista(txt: str) -> str:
+    return "<br>".join(html.escape(x) for x in txt.split("\n"))
+
+
+def f2_cuestionario():
+    n_total, n_pre = Q.total_preguntas(), Q.N_PRECARGADAS
+    encabezado("Fase 2 · Validación · propuesta del equipo", "Cuestionario común multisede")
+    simple("las tres encuestas actuales preguntan lo mismo de formas distintas, y por eso no se pueden "
+           "sumar ni comparar entre sedes. Proponemos un <b>núcleo de preguntas idéntico en todas las "
+           "sedes</b> (mismo texto, orden, opciones y códigos), más módulos opcionales que cada sede "
+           "añade al final.")
+    cols = st.columns(4)
+    for col, (num, txt) in zip(cols, [(n_total, f"preguntas en el núcleo ({n_pre} precargadas del registro)"),
+                                      (n_total - n_pre, "las responde el graduado: 15 a 18 minutos"),
+                                      (len(Q.NUCLEO), "secciones: personal, profesional, social, académica y relación USTA"),
+                                      (len(Q.MODULOS), "módulos opcionales por sede")]):
+        with col:
+            st.markdown(f'<div class="card"><div class="big">{num}</div><p>{txt}</p></div>',
+                        unsafe_allow_html=True)
+    d1, d2, _ = st.columns([1, 1, 2])
+    if DOCX_CUESTIONARIO.exists():
+        d1.download_button("Descargar el cuestionario (Word)", DOCX_CUESTIONARIO.read_bytes(),
+                           file_name=DOCX_CUESTIONARIO.name, icon=":material/download:")
+    if PDF_CUESTIONARIO.exists():
+        d2.download_button("Descargar en PDF", PDF_CUESTIONARIO.read_bytes(),
+                           file_name=PDF_CUESTIONARIO.name, icon=":material/picture_as_pdf:")
+
+    t1, t2, t3, t4, t5, t6 = st.tabs(["① Núcleo común", "② Módulos opcionales", "③ Escalas estándar",
+                                      "④ Trazabilidad", "⑤ Qué cambia", "⑥ Protocolo y piloto"])
+    with t1:
+        _q_nucleo()
+    with t2:
+        _q_modulos()
+    with t3:
+        _q_escalas()
+    with t4:
+        _q_traza()
+    with t5:
+        st.markdown("Preguntas de los estudios actuales que no pasan al núcleo tal como están, y su reemplazo.")
+        tabla_html(pd.DataFrame(Q.REEMPLAZOS, columns=["Pregunta actual", "Propuesta"]))
+    with t6:
+        _q_protocolo()
+
+
+def _q_nucleo():
+    st.markdown("**Pares «antes / ahora».** La misma pregunta referida al grado y al presente: así se "
+                "observa la transformación aunque la persona responda una sola vez.")
+    cols = st.columns(len(PARES_ANTES_AHORA))
+    for col, (t, a, b) in zip(cols, PARES_ANTES_AHORA):
+        with col:
+            card(t, f"<b>{a}</b> al grado → <b>{b}</b> hoy")
+    st.write("")
+    busca = st.text_input("Buscar en todas las preguntas", placeholder="p. ej. ingreso, estrato, competencias")
+    if busca:
+        b = busca.lower()
+        lista = [p for p in Q.preguntas() if b in (p["pregunta"] + p["opciones"] + p["codigo"]).lower()]
+        st.caption(f"{len(lista)} pregunta(s) encontradas.")
+    else:
+        secciones = {f"{s[0]} · {s[1]}": s for s in Q.NUCLEO}
+        sel = st.radio("Sección", list(secciones), horizontal=True, label_visibility="collapsed")
+        letra, _, nota, _ = secciones[sel]
+        st.caption(nota)
+        lista = [p for p in Q.preguntas() if p["seccion"] == letra]
+    for p in lista:
+        dim, ind, *_ = Q.TRAZA[p["codigo"]]
+        with st.container(border=True):
+            c1, c2 = st.columns([3, 2])
+            c1.markdown(f'{chips([p["codigo"]], "gold")}{chips([dim])}<br><b>{html.escape(p["pregunta"])}</b>'
+                        f'<div class="fuente">Origen: {html.escape(p["origen"])} · Alimenta: {html.escape(ind)}</div>',
+                        unsafe_allow_html=True)
+            c2.markdown(f'<div style="font-size:.9rem;color:#33415C">{_lista(p["opciones"])}</div>',
+                        unsafe_allow_html=True)
+
+
+def _q_modulos():
+    st.markdown("Cada sede elige los módulos que necesita. Si aplica uno, usa el texto tal como está, "
+                "para que también sea comparable entre las sedes que lo usen.")
+    for i in range(0, len(Q.MODULOS), 2):
+        cols = st.columns(2)
+        for col, (cod, titulo, origen, uso, items) in zip(cols, Q.MODULOS[i:i + 2]):
+            with col:
+                card(f"{cod} · {titulo}", "<br>".join(f"• {html.escape(x)}" for x in items),
+                     f"Origen: {origen} · Útil para: {uso}")
+        st.write("")
+
+
+def _q_escalas():
+    filas = [("Nivel (contribución, correspondencia, satisfacción)", Q.NIVEL), ("Acuerdo (afirmaciones)", Q.ACUERDO),
+             ("Incidencia (E04)", Q.INCIDENCIA), ("Ingreso (C03, C04)", Q.SMMLV),
+             ("Códigos especiales (todas)", "97 No sabe\n98 Prefiero no responder\n99 No aplica\nVacío = salto")]
+    cols = st.columns(len(filas))
+    for col, (t, esc) in zip(cols, filas):
+        with col:
+            card(t, _lista(esc))
+    st.write("")
+    st.markdown('<div class="simple"><b>¿Por qué en SMMLV?</b> Los rangos en pesos pierden vigencia con la '
+                "inflación (Percepción usa pesos de 2022). En salarios mínimos, las cohortes y los años se "
+                "comparan entre sí. C03 es retrospectiva y tiene sesgo de recuerdo.</div>", unsafe_allow_html=True)
+
+
+def _q_traza():
+    st.markdown("Cada pregunta del núcleo, con la dimensión del modelo, el indicador que alimenta y si "
+                "existe en las bases históricas.")
+    bases = ["PENSER 2025", "Percepción 2022", "Formulario 2023–26"]
+    fig = go.Figure()
+    for marca in ["✓", "≈", "—"]:
+        cuenta = [sum(1 for v in Q.TRAZA.values() if v[2 + i] == marca) for i in range(3)]
+        fig.add_bar(y=bases, x=cuenta, orientation="h", name=NOMBRE_COMPARA[marca],
+                    marker_color=COLOR_COMPARA[marca], text=cuenta, textposition="inside",
+                    hovertemplate="%{y}: %{x} preguntas<extra>" + NOMBRE_COMPARA[marca] + "</extra>")
+    fig.update_layout(barmode="stack", height=230, margin=dict(l=10, r=10, t=30, b=10),
+                      plot_bgcolor="#fff",
+                      legend=dict(orientation="h", y=1.02, yanchor="bottom", x=0, traceorder="normal"),
+                      xaxis=dict(title=f"Preguntas del núcleo (de {len(Q.TRAZA)})", gridcolor="#EEF1F6"),
+                      yaxis=dict(autorange="reversed"))
+    st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+    texto = {p["codigo"]: p["pregunta"] for p in Q.preguntas()}
+    df = pd.DataFrame([[k, texto[k], *v] for k, v in Q.TRAZA.items()],
+                      columns=["Código", "Pregunta", "Dimensión", "Indicador que alimenta", *bases])
+    dims = st.multiselect("Filtrar por dimensión", sorted(df["Dimensión"].unique()), placeholder="Todas")
+    tabla_html(df[df["Dimensión"].isin(dims)] if dims else df)
+    st.caption("Ninguna base histórica cubre el núcleo completo: por eso hoy no se pueden comparar sedes "
+               "ni cohortes con las mismas preguntas.")
+
+
+def _q_protocolo():
+    cols = st.columns(4)
+    for col, (t, d) in zip(cols, [
+        ("Cuándo", "Una vez al año, en la misma ventana en todas las sedes, a los graduados de hace "
+                   "<b>1, 3 y 5 años</b>. El primer año, todas las cohortes de los últimos cinco años como línea base."),
+        ("Unión de respuestas", "Identificador <b>seudonimizado</b> derivado del documento con una clave "
+                                "institucional: une las respuestas de un graduado entre años sin guardar su documento."),
+        ("Estandarización", "Una sola versión (v1.0) con control de cambios central. Columnas exportadas con "
+                            "los códigos (A01…H04). Ninguna sede edita el núcleo."),
+        ("Datos personales", "Consentimiento según la Ley 1581 de 2012. Solo resultados agregados, sin celdas "
+                             "de menos de 5 personas.")]):
+        with col:
+            card(t, d)
+    st.subheader("Ruta de validación del cuestionario")
+    tabla_html(pd.DataFrame([
+        ("1. Revisión de expertos", "Experto temático y directores de graduados de cada sede revisan redacción y pertinencia.", "Versión 0.9"),
+        ("2. Prueba cognitiva", "10 a 15 graduados por sede responden en voz alta para detectar preguntas confusas.", "Ajustes de redacción"),
+        ("3. Piloto en dos o más sedes", "Aplicación real a una cohorte: tiempo, abandono y vacíos por pregunta.", "Base piloto"),
+        ("4. Validación estadística", "Alfa de Cronbach y análisis factorial confirmatorio de E03; consistencia de los pares antes/ahora.", "Informe técnico"),
+        ("5. Cierre", "Se congela el núcleo y se publica el diccionario de datos.", "Instrumento v1.0 (Fase 3)"),
+    ], columns=["Paso", "Qué se hace", "Producto"]))
+    st.caption("El tamaño de muestra por grupo se calcula en la página «Propuesta de piloto». "
+               "Las cohortes de 1, 3 y 5 años son propuesta del equipo; el Manual para estudios de seguimiento "
+               "a graduados (sección 5.1.6) respalda el panel para observar el cambio individual.")
+
+
+# ---------------------------------------------------------------------------
 # Anexos
 # ---------------------------------------------------------------------------
 def anexo_fichas():
@@ -806,6 +972,7 @@ def anexo_glosario():
 # ---------------------------------------------------------------------------
 # Navegación por fases
 # ---------------------------------------------------------------------------
+PAGINA_CUESTIONARIO = st.Page(f2_cuestionario, title="Cuestionario común multisede", icon=":material/quiz:")
 pg = st.navigation({
     "Inicio": [st.Page(inicio, title="Portada", icon=":material/home:", default=True)],
     "Fase 0 · Formulación": [st.Page(fase0, title="Objetivos, referentes y método", icon=":material/flag:")],
@@ -816,7 +983,8 @@ pg = st.navigation({
         st.Page(f1_instrumentos, title="4. Instrumentos y métodos", icon=":material/assignment:"),
         st.Page(f1_diseno, title="5. Diseño del modelo y plan", icon=":material/account_tree:"),
     ],
-    "Fase 2 · Validación": [st.Page(fase2, title="Propuesta de piloto", icon=":material/groups:")],
+    "Fase 2 · Validación": [st.Page(fase2, title="Propuesta de piloto", icon=":material/groups:"),
+                            PAGINA_CUESTIONARIO],
     "Anexos": [st.Page(anexo_fichas, title="Fichas técnicas", icon=":material/description:"),
                st.Page(anexo_glosario, title="Glosario y documentos", icon=":material/dictionary:")],
 })
