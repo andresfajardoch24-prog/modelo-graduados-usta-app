@@ -6,6 +6,7 @@ Solo lee salidas agregadas del agente de perfilado; nunca abre las bases con
 datos personales, así que puede correr sin acceso a DATAS GRADUADOS.
 """
 import html
+import importlib
 import json
 import sys
 from pathlib import Path
@@ -16,8 +17,12 @@ import streamlit as st
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
-from agente import cuestionario as Q  # noqa: E402
-from agente import fichas as F  # noqa: E402
+from agente import config as _config, cuestionario as Q, fichas as F, textos as _textos  # noqa: E402
+
+# Streamlit solo vigila la carpeta de app.py: sin esto, tras un push el servidor (local o
+# Streamlit Cloud) seguiría usando la versión vieja de los módulos de agente/ que ya tenía en memoria.
+for _m in (_config, _textos, Q, F):
+    importlib.reload(_m)
 from agente.textos import (ACTIVIDADES_FASE2, CRONOGRAMA_FASE2, DIMENSIONES,  # noqa: E402
                            FUENTES_EXTERNAS, INSTRUMENTO, METODOS, PALETA_VEREDICTO,
                            SIGNIFICADO_VEREDICTO)
