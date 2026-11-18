@@ -108,6 +108,47 @@ def simple(texto: str):
                 unsafe_allow_html=True)
 
 
+def nota(titulo: str, texto: str):
+    """Recuadro amarillo con una explicación para quien no es especialista."""
+    st.markdown(f'<div class="simple"><b>{titulo}</b> {texto}</div>', unsafe_allow_html=True)
+
+
+def guia_graficos(linea_dorada: bool = False):
+    with st.expander("¿Cómo leer estos gráficos?"):
+        st.markdown(
+            "- **La barra** es el porcentaje (o el puntaje) del grupo.\n"
+            "- **La línea negra** en la punta es el *intervalo de confianza*: el rango donde "
+            "probablemente está el valor real. Es más corta cuantas más personas respondieron.\n"
+            "- **Si las líneas negras de dos grupos se cruzan**, la diferencia entre ellos puede ser "
+            "casualidad: no se puede decir que uno esté mejor que el otro.\n"
+            "- **Barras grises**: menos de 30 respuestas. Son muy pocas para sacar conclusiones.\n"
+            + ("- **La línea dorada punteada** es el promedio general, para comparar cada grupo con él.\n"
+               if linea_dorada else "")
+            + "- Las cifras describen a **quienes respondieron** la encuesta, no a todos los graduados.")
+
+
+def lectura_pct(r: dict) -> str:
+    """Frase sencilla para un resultado con porcentaje e intervalo."""
+    return (f"Resultado «{html.escape(str(r['etiqueta']))}»: <b>{fmt(r['pct'])} %</b> de los "
+            f"{fmt(r['n'], 0)} graduados que respondieron, es decir, más o menos <b>{round(r['pct'])} de "
+            f"cada 100</b>. Con 95 % de confianza, el valor real está entre {fmt(r['li'])} % y {fmt(r['ls'])} %.")
+
+
+def comparar_grupos(filas: list, que: str, sufijo: str = " %") -> str | None:
+    """Compara el grupo más alto y el más bajo y dice si la diferencia es clara."""
+    ok = [r for r in filas if r.get("suficiente", True) and r.get("pct") is not None]
+    if len(ok) < 2:
+        return None
+    alto, bajo = max(ok, key=lambda r: r["pct"]), min(ok, key=lambda r: r["pct"])
+    clara = alto["li"] > bajo["ls"]
+    return (f"Entre {que}s con suficientes respuestas, el valor más alto es <b>«{html.escape(str(alto['etiqueta']))}»</b> "
+            f"({fmt(alto['pct'])}{sufijo}) y el más bajo <b>«{html.escape(str(bajo['etiqueta']))}»</b> "
+            f"({fmt(bajo['pct'])}{sufijo}). "
+            + ("Sus intervalos no se cruzan: la diferencia <b>probablemente es real</b>, aunque no dice por qué ocurre."
+               if clara else
+               "Sus intervalos se cruzan: la diferencia <b>podría ser casualidad</b>."))
+
+
 def fuente(texto: str):
     st.markdown(f'<div class="fuente">Fuente: {texto}</div>', unsafe_allow_html=True)
 
@@ -189,6 +230,31 @@ def inicio():
                                (fmt(DATOS["indice"]["general"]["media"]), "índice prototipo (0–100)")]):
         col.markdown(f'<div class="card"><div class="big">{v}</div><p>{t}</p></div>',
                      unsafe_allow_html=True)
+    st.caption("El índice prototipo resume en un número de 0 a 100 cuánto cambió la vida de los graduados "
+               "en cuatro dimensiones. No es una nota de aprobado o reprobado: sirve para comparar grupos "
+               "y años entre sí.")
+
+    st.subheader("Tres ideas para entender todo el documento")
+    cols = st.columns(3)
+    for col, (t, d) in zip(cols, [
+        ("1 · Transformación no es impacto",
+         "Medimos <b>qué cambió</b> en la vida del graduado (empleo, ingresos, estudios…). No afirmamos "
+         "que la Universidad <b>causó</b> ese cambio: para eso haría falta comparar con personas parecidas "
+         "que no estudiaron."),
+        ("2 · Cada cifra trae su margen",
+         "Los porcentajes salen de encuestas, no de todos los graduados. Por eso cada uno va con un "
+         "<b>intervalo de confianza</b>: el rango donde probablemente está el valor real."),
+        ("3 · Solo cifras agregadas",
+         "Ninguna página muestra datos de una persona. Todo son porcentajes y promedios de grupos, "
+         "como exige la ley de protección de datos (Ley 1581 de 2012)."),
+    ]):
+        with col:
+            card(t, d)
+    st.write("")
+    nota("¿Primera vez aquí?", "Le sugerimos este recorrido: <b>Marco conceptual</b> (qué es la transformación) "
+         "→ <b>Dimensiones, variables e indicadores</b> (qué se midió y qué resultó) → <b>Cuestionario común "
+         "multisede</b> (qué se propone preguntar en adelante). Si encuentra una palabra técnica, búsquela en "
+         "<b>Anexos · Glosario</b>.")
 
     st.subheader("Ruta del modelo y dónde estamos")
     colores = [NAVY, "#0E7C86", "#2E7D32", "#6B7A93"]
@@ -236,6 +302,9 @@ def fase0():
     encabezado("Fase 0 · ago-2025 – oct-2025", "Formulación del proyecto",
                "La fase 0 la cerró la Universidad con el proyecto aprobado. Aquí se resume lo que "
                "de ella toma esta consultoría: objetivos, referentes, método y alineación institucional.")
+    simple("antes de empezar a medir, la Universidad definió <b>qué quería saber</b> de sus graduados, "
+           "<b>en qué autores e informes</b> se apoya y <b>cómo</b> se iba a estudiar. Esta página resume "
+           "esas decisiones: son las reglas de juego del resto del documento.")
     t1, t2, t3, t4 = st.tabs(["Objetivos y alcance", "Referentes teóricos", "Diseño metodológico",
                               "Alineación institucional"])
     with t1:
@@ -256,6 +325,9 @@ def fase0():
                     "- Recolectar datos nuevos: se trabajó con las tres bases existentes.\n"
                     "- Fijar pesos definitivos del índice: le corresponde a la validación.")
     with t2:
+        nota("¿Qué son los referentes?", "Las teorías, estudios e informes en los que se apoya el modelo. "
+             "Cada bloque dice qué plantean (con su fuente) y, al final, <b>qué le aporta al proyecto</b>; "
+             "si tiene poco tiempo, lea solo esa línea.")
         for b in MARCOS["teorico"]:
             with st.expander(f"{b['n']}. {b['titulo']}", expanded=b["n"] in ("2", "3")):
                 for p in b["puntos"]:
@@ -271,6 +343,19 @@ def fase0():
         c1, c2 = st.columns(2)
         c1.markdown(f"**Unidad de análisis:** {m['unidad']}  \n**Muestreo:** {m['muestreo']['texto']}")
         c2.markdown("**Exclusiones:**\n" + "\n".join(f"- {e}" for e in m["exclusiones"]))
+        with st.expander("¿Qué quieren decir estos términos?", expanded=True):
+            st.markdown(
+                "- **Cuantitativo y descriptivo:** se trabaja con números para *describir* cómo están los "
+                "graduados, no para probar qué causó su situación.\n"
+                "- **No experimental:** nadie fue asignado a un grupo; se observa lo que ya pasó.\n"
+                "- **Preguntas retrospectivas:** se le pide a la persona recordar cómo estaba antes "
+                "(por ejemplo, su estrato al graduarse).\n"
+                "- **Comparación entre cohortes (pseudo-panel):** como no se sigue a las mismas personas, se "
+                "compara a quienes se graduaron hace poco con quienes se graduaron hace más tiempo.\n"
+                "- **Unidad de análisis:** a quién se estudia; aquí, cada graduado.\n"
+                "- **Muestreo no probabilístico, por autoselección:** respondió quien quiso. Por eso los "
+                "resultados describen a quienes respondieron y no se pueden generalizar sin cuidado a "
+                "todos los graduados.")
         st.markdown("#### Etapas del trabajo")
         tabla_html(pd.DataFrame([{"Etapa": f["fase"], "Qué se hace": f["detalle"],
                                   "Pregunta del modelo": f["pregunta"]} for f in m["fases"]]))
@@ -279,6 +364,10 @@ def fase0():
     with t4:
         st.markdown("El modelo responde a dos usos institucionales definidos en la lámina 4 y a la "
                     "exigencia de acreditación del CESU.")
+        nota("En palabras sencillas:", "la información sirve para dos cosas concretas: <b>mejorar los "
+             "programas</b> (qué enseñar, qué cambiar) y <b>ofrecer servicios útiles a los graduados</b> "
+             "(cursos, empleo, redes). Además, el CESU (Consejo Nacional de Educación Superior) pide a las "
+             "universidades conocer qué pasa con sus graduados para acreditar su calidad.")
         c1, c2 = st.columns(2)
         u = CONC["usos"]
         with c1:
@@ -314,9 +403,16 @@ def f1_marco():
     with c2:
         card("✖ Impacto causal (exige más)", f"«{ej['causal']}»")
     st.caption(ej["lectura"] + " · " + ej["fuente"])
+    nota("Un ejemplo cotidiano:", "si una persona hoy gana más que cuando se graduó, eso es "
+         "<b>transformación</b>, y se puede observar con una encuesta. Decir que gana más <b>gracias a</b> "
+         "la Universidad es <b>impacto</b>: también pudo influir la economía, su familia o su ciudad. Para "
+         "afirmarlo habría que compararla con alguien muy parecido que no estudió, y esos datos no existen. "
+         "Por eso el modelo habla de transformación.")
 
     st.subheader("Definición operativa para medir")
     do = tr["definicion_operativa"]
+    st.caption("«Operativa» quiere decir: la definición convertida en reglas concretas para decidir qué "
+               "cuenta como transformación al revisar los datos.")
     st.markdown(f"> {do['texto']}")
     for c in do["criterios"]:
         st.markdown(f"- {c}")
@@ -329,6 +425,8 @@ def f1_marco():
     c1, c2 = st.columns(2)
     with c1:
         st.subheader("Seguimiento y evaluación")
+        st.caption("En corto: el seguimiento **observa** (toma los datos cada cierto tiempo) y la "
+                   "evaluación **interpreta** (dice si lo observado es bueno y qué hacer).")
         for s in tr["seguimiento_vs_evaluacion"]:
             card(s["concepto"], f"{s['funcion']}. <i>{s['pregunta']}</i>")
             st.write("")
@@ -339,6 +437,8 @@ def f1_marco():
                     "segmentado y no se afirma causalidad:")
         st.markdown(chips(tr["factores_externos"]["lista"]), unsafe_allow_html=True)
         fuente(tr["factores_externos"]["fuente"])
+        st.caption("«Leer segmentado» es comparar grupos parecidos entre sí (misma sede, mismo programa, "
+                   "mismo año de grado) en vez de mezclar a todos, para que esos factores pesen menos.")
 
     st.subheader("Las cinco preguntas del modelo y dónde se responden")
     donde = {1: "Esta página", 2: "Dimensiones, variables e indicadores", 3: "Fuentes de información",
@@ -359,6 +459,14 @@ def f1_dimensiones():
            "(preguntas de las encuestas) y las variables se combinan en <b>indicadores</b>.")
     st.markdown(chips(["Dimensión", "→ Aspecto", "→ Variable", "→ Indicador", "→ Índice"], "gold"),
                 unsafe_allow_html=True)
+    soc = IND.get("SOC-01")
+    if soc:
+        r = soc["resultados"][0]
+        st.markdown(
+            "**Un ejemplo de la cadena completa:** dimensión **Social** → aspecto **movilidad social** → "
+            "variables **«estrato al graduarse»** y **«estrato actual»** → indicador **SOC-01 Movilidad de "
+            f"estrato**, que da {fmt(r['pct'])} % ({r['etiqueta'].lower()}). Esas mismas variables forman el "
+            "componente social del **índice** de 0 a 100.")
     t1, t2, t3, t4 = st.tabs(["① Dimensiones", "② Variables: ¿cuáles sirven y por qué?",
                               "③ Indicadores", "④ Matriz de medibilidad"])
     with t1:
@@ -372,6 +480,10 @@ def f1_dimensiones():
 
 
 def _dimensiones():
+    nota("Cómo leer cada recuadro:", "a la izquierda, qué mira la dimensión y cuántas variables e indicadores "
+         "tiene. A la derecha, sus aspectos (la letra entre paréntesis dice qué tan sólida es la evidencia, "
+         "de A a D) y el resultado principal de cada indicador. <b>n</b> es el número de personas que "
+         "respondieron: cuanto más grande, más confiable el porcentaje.")
     aspectos = CONC["aspectos"]["lista"]
     conteo = DIC[DIC["veredicto"].str.startswith("Sirve")].groupby("dimension").size()
     for nombre, info in DIMENSIONES.items():
@@ -390,14 +502,17 @@ def _dimensiones():
                 for i in inds:
                     r = i["resultados"][0]
                     st.markdown(f"`{i['id']}` **{i['nombre']}** — {fmt(r['pct'])} % "
-                                f"<span class='fuente'>({r['etiqueta']}, n = {r['n']:,})</span>".replace(",", "."),
+                                f"<span class='fuente'>({r['etiqueta']}, n = {fmt(r['n'], 0)})</span>",
                                 unsafe_allow_html=True)
     st.caption("Entre paréntesis, el nivel de evidencia del aspecto: A hecho verificable, B cambio "
                "declarado, C percepción, D no disponible. Dimensiones: Modelo 2026, lámina 3.")
 
 
 def _variables():
-    st.markdown("Se revisaron **las 352 variables** de las tres bases. Para cada una se respondieron "
+    nota("¿Qué es una variable?", "Cada pregunta de una encuesta, guardada como una columna en la base de "
+         "datos. Por ejemplo, «¿cuál es su estrato actual?» es una variable. No todas sirven para medir "
+         "transformación: algunas solo describen a la persona y otras tienen muy pocas respuestas.")
+    st.markdown(f"Se revisaron **las {len(DIC)} variables** de las tres bases. Para cada una se respondieron "
                 "cinco preguntas:")
     cols = st.columns(5)
     criterios = [("1. ¿Es pertinente?", "¿Corresponde a un aspecto de alguna dimensión del modelo?"),
@@ -448,6 +563,8 @@ def _variables():
                       legend=dict(orientation="h", y=-0.25), plot_bgcolor="#fff",
                       title=dict(text="Veredicto por base (número de variables)", font=dict(size=14)))
     st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+    st.caption("Cada barra es una encuesta y cada color un veredicto. Cuanto más largo el tramo de los colores "
+               "«Sirve…», más útil es esa encuesta para medir transformación.")
 
     with st.expander("¿Qué significa cada veredicto?", expanded=False):
         expl = SIGNIFICADO_VEREDICTO
@@ -493,8 +610,11 @@ def _base_desglose(ind):
 
 
 def _indicadores():
-    st.markdown("Los 14 indicadores convierten las variables útiles en porcentajes comparables. "
-                "Cada uno tiene ficha técnica en **Anexos**.")
+    nota("¿Qué es un indicador?", f"Una cifra que resume un aspecto de la transformación, casi siempre "
+         f"como porcentaje. Los {len(IND)} indicadores convierten las variables útiles en porcentajes que se "
+         "pueden comparar entre sedes y años. Cada uno tiene ficha técnica en <b>Anexos</b>. La columna "
+         "«Tipo» dice si el indicador mide un <b>cambio</b> (antes → después), una <b>situación actual</b>, "
+         "lo que el graduado <b>atribuye</b> a su formación o un insumo para el <b>portafolio</b> de servicios.")
     tipos = {"cambio": "Cambio (antes → después)", "nivel": "Nivel (situación actual)",
              "contribución": "Contribución percibida", "portafolio": "Portafolio de servicios"}
     resumen = pd.DataFrame([{"Código": i["id"], "Indicador": i["nombre"], "Dimensión": i["dimension"],
@@ -509,6 +629,7 @@ def _indicadores():
     ind = IND[sel]
     lect = EXPLICA["lecturas"].get(sel, {})
     st.markdown(f"**Pregunta que responde:** {lect.get('pregunta', '')}")
+    nota("Lectura en palabras sencillas:", lectura_pct(ind["resultados"][0]))
     c1, c2 = st.columns([3, 2])
     with c1:
         filas = [{**r, "etiqueta": f"{r['etiqueta']}"} for r in ind["resultados"]]
@@ -534,9 +655,14 @@ def _indicadores():
         st.markdown("**Por cohorte de grado**")
         coh = [{**r, "etiqueta": etiqueta_cohorte(r["etiqueta"], base)} for r in ind["por_cohorte"]]
         barras_ci(coh, orden=ORDEN_COH)
+    frases = [f for f in (comparar_grupos(ind["por_sede"], "sede"),
+                          comparar_grupos(coh, "cohorte")) if f]
+    if frases:
+        nota("¿Qué dicen estas comparaciones?", "<br><br>".join(frases))
     st.caption("Barras grises: menos de 30 respuestas, no se interpretan. Línea negra: intervalo de "
                "confianza de Wilson al 95 %. Los porcentajes describen a quienes respondieron, no a "
                "todos los graduados.")
+    guia_graficos()
     if ind["extra"] and "matriz" in ind["extra"]:
         m = ind["extra"]["matriz"]
         st.markdown("**Matriz de transición: de dónde venían (filas) y a dónde llegaron (columnas), % por fila**")
@@ -554,12 +680,17 @@ def _matriz():
     a = CONC["aspectos"]
     st.markdown("Qué aspectos de la transformación (lámina 3) se pueden medir con las bases "
                 "disponibles, con qué nivel de evidencia y con qué indicador.")
+    nota("Para qué sirve esta tabla:", "muestra de un vistazo qué parte del modelo ya se puede medir y qué "
+         "parte <b>todavía no</b>, porque las encuestas actuales no lo preguntan. Lo que no se puede medir "
+         "hoy es justamente lo que debe cubrir el cuestionario común de la Fase 2.")
     df = pd.DataFrame([{"Aspecto": x["aspecto"], "Dimensión": x["dimension"], "¿Medible?": x["medible"],
                         "Evidencia": x["evidencia"], "Base": x["base"], "Cómo se mide": x["como"],
                         "Indicadores": ", ".join(x["indicadores"]) or "—"} for x in a["lista"]])
     tabla_html(df)
     fuente(a["fuente"])
     st.markdown("#### Niveles de evidencia")
+    st.caption("De la más sólida (A, se puede comprobar con un registro) a la más débil (C, opinión de la "
+               "persona). D significa que hoy no hay datos.")
     cols = st.columns(4)
     for col, n in zip(cols, CONC["niveles_evidencia"]):
         with col:
@@ -577,10 +708,13 @@ def f1_fuentes():
     cols = st.columns(3)
     for col, (k, b) in zip(cols, DATOS["bases"].items()):
         with col:
-            card(b["nombre"], f"{b['descripcion']}<br><br><b>{b['registros_originales']:,}</b> registros → "
-                 f"<b>{b['registros_analizables']:,}</b> analizables · {b['variables']} variables".replace(",", "."),
+            card(b["nombre"], f"{b['descripcion']}<br><br><b>{fmt(b['registros_originales'], 0)}</b> registros → "
+                 f"<b>{fmt(b['registros_analizables'], 0)}</b> analizables · {b['variables']} variables",
                  f"Recolección: {b['recoleccion']}")
     st.subheader("Depuración documentada")
+    nota("¿Qué es depurar?", "Limpiar la base antes de analizarla: quitar a quien no dio permiso para usar "
+         "sus datos, las respuestas repetidas y las filas de prueba. La tabla dice cuántas filas salieron "
+         "en cada paso y por qué, para que cualquiera pueda repetir el proceso.")
     sel = st.radio("Base", list(DATOS["bases"]), horizontal=True,
                    format_func=lambda k: DATOS["bases"][k]["nombre"])
     b = DATOS["bases"][sel]
@@ -604,13 +738,23 @@ def f1_fuentes():
                 st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
             else:
                 st.caption("No disponible.")
+    st.caption("La composición muestra de qué sedes y años de grado son quienes respondieron. Si una sede o "
+               "un periodo pesa mucho, los resultados generales se parecen más a ese grupo.")
     st.subheader("¿Se pueden unir las bases?")
+    nota("¿Por qué importa?", "Si la misma persona aparece en dos encuestas de años distintos, se puede ver "
+         "<b>su</b> cambio real, sin depender de lo que recuerda. La tabla muestra que muy pocas personas "
+         "coinciden entre bases; por eso la transformación se mide con preguntas de «antes y ahora» y "
+         "comparando promociones.")
     tabla_html(pd.DataFrame(DATOS["cruces"]).rename(columns={
         "par": "Cruce", "criterio": "Llave", "a": "Registros A", "b": "Registros B",
         "comunes": "En común", "lectura": "Lectura"}))
-    st.caption("Los cruces se hicieron con huellas cifradas (SHA-256): ningún documento ni correo sale del equipo.")
+    st.caption("Los cruces se hicieron con huellas cifradas (SHA-256): ningún documento ni correo sale del equipo. "
+               "Una huella cifrada es un código que siempre sale igual para el mismo documento, pero del "
+               "que no se puede volver a obtener el documento.")
     st.subheader("Fuentes que el modelo pide y aún no están")
     st.markdown("La lámina 2 pide triangular con empleadores y fuentes externas. Propuesta para la Fase 2:")
+    st.caption("«Triangular» es contrastar lo que dice el graduado con otra fuente (un registro oficial, el "
+               "empleador) para confirmar que el dato es cierto.")
     tabla_html(pd.DataFrame(FUENTES_EXTERNAS, columns=["Fuente", "Para qué", "Cómo"]))
     fuente("Modelo 2026, lámina 2 (fuentes); propuesta del equipo (uso y forma de acceso).")
 
@@ -626,6 +770,9 @@ def f1_instrumentos():
            "momentos</b>. Hoy cada encuesta pregunta distinto. Proponemos un módulo mínimo común "
            "para todas las encuestas futuras y los métodos para analizarlo.")
     st.subheader("Métodos de análisis")
+    nota("No hace falta conocer cada técnica:", "la columna «Para qué sirve» explica en una frase qué "
+         "pregunta responde cada método. Los nombres técnicos están para que un estadístico pueda "
+         "revisar y repetir el trabajo.")
     tabla_html(pd.DataFrame(METODOS, columns=["Método", "Para qué sirve", "Dónde se usa"]))
     st.subheader("Instrumento mínimo común (propuesta)")
     st.markdown("Preguntas que toda encuesta de graduados de la USTA debería incluir, con la misma "
@@ -633,6 +780,8 @@ def f1_instrumentos():
     tabla_html(pd.DataFrame(INSTRUMENTO, columns=["Dimensión", "Pregunta (antes / ahora)", "Escala",
                                                   "Qué cambia frente a hoy", "Alimenta"]))
     st.subheader("¿Cuándo preguntar?")
+    st.caption("Preguntar en varios momentos es como tomar fotos de la misma persona a lo largo del tiempo: "
+               "al compararlas se ve el cambio, sin depender de lo que la persona recuerda.")
     cols = st.columns(4)
     for col, (t, d) in zip(cols, [("Al grado", "Línea base: la situación «antes». Elimina el sesgo de recuerdo."),
                                   ("1 año", "Inserción laboral y primer empleo."),
@@ -662,12 +811,15 @@ def f1_diseno():
         col.markdown(f'<div class="fase" style="background:{bg};color:{fg};text-align:center">'
                      f'<h4 style="color:{fg};margin:0">{t}</h4><small>{d}</small></div>', unsafe_allow_html=True)
     st.caption("Seguimiento (observar) → evaluación (interpretar) → decisiones. Modelo 2026, láminas 3 y 4.")
+    simple("se parte de las encuestas, se escogen las preguntas útiles, se convierten en porcentajes "
+           "(indicadores), se resumen en un solo número (índice) y todo eso se usa para dos decisiones: "
+           "mejorar los programas y diseñar servicios para los graduados.")
 
     st.subheader("Prototipo de Índice de Transformación del Graduado")
     ix = DATOS["indice"]
     simple(f"cada graduado recibe de 0 a 100 en cada dimensión y el índice es el promedio de las cuatro. "
            f"En promedio los graduados obtienen <b>{fmt(ix['general']['media'])}</b> de 100 "
-           f"(IC 95 %: {fmt(ix['general']['li'])}–{fmt(ix['general']['ls'])}; n = {ix['n']:,}).".replace(",", "."))
+           f"(IC 95 %: {fmt(ix['general']['li'])}–{fmt(ix['general']['ls'])}; n = {fmt(ix['n'], 0)}).")
     cols = st.columns(5)
     for col, (k, v) in zip(cols, ix["componentes"].items()):
         col.markdown(f'<div class="card"><p>{k}</p><div class="big">{fmt(v["media"])}</div><p>de 100</p></div>',
@@ -676,6 +828,14 @@ def f1_diseno():
                      f'<div class="big" style="color:{GOLD}">{fmt(ix["general"]["media"])}</div>'
                      f'<p style="color:#fff">de 100</p></div>', unsafe_allow_html=True)
     st.write("")
+    comp = ix["componentes"]
+    alto = max(comp, key=lambda k: comp[k]["media"])
+    bajo = min(comp, key=lambda k: comp[k]["media"])
+    nota("Cómo leer estas cifras:", f"el índice no es una nota de aprobado o reprobado; es un punto en una "
+         f"escala que sirve para comparar grupos y, en el futuro, años. Hoy la dimensión más alta es "
+         f"<b>{alto}</b> ({fmt(comp[alto]['media'])}) y la más baja <b>{bajo}</b> ({fmt(comp[bajo]['media'])}). "
+         "Una cifra baja no significa necesariamente un mal resultado: depende de cómo se puntúa cada "
+         "dimensión (ver «Cómo se calcula cada componente»).")
     with st.expander("Cómo se calcula cada componente"):
         for c in CONC["indice"]["componentes"]:
             st.markdown(f"- **{c['dimension']}:** {c['regla']}")
@@ -694,6 +854,11 @@ def f1_diseno():
         barras_ci(filas(ix["por_sede"], "percepcion"), sufijo="", ref=ix["general"]["media"])
     st.caption("Línea dorada: promedio general. Las sedes no se ordenan como ranking: las muestras no "
                "son representativas y falta ponderar.")
+    frases = [f for f in (comparar_grupos(filas(ix["por_cohorte"], "percepcion"), "cohorte", ""),
+                          comparar_grupos(filas(ix["por_sede"], "percepcion"), "sede", "")) if f]
+    if frases:
+        nota("¿Qué dicen estas comparaciones?", "<br><br>".join(frases))
+    guia_graficos(linea_dorada=True)
     st.markdown("**Lo que falta para validar el índice**")
     for p in CONC["indice"]["pendiente"] + ["Revisar la escala académica: hoy quien tiene solo pregrado recibe 0"]:
         st.markdown(f"- {p}")
@@ -727,6 +892,8 @@ def fase2():
     rol = MODELO["rol_equipo_tecnico"]
     st.markdown(f"**Equipo técnico:** {rol['actor']}. Roles: " + chips(rol["roles"]), unsafe_allow_html=True)
     fuente(rol["fuente"])
+    st.caption("Un piloto es un ensayo general: se aplica el modelo a un grupo pequeño para corregir errores "
+               "antes de extenderlo a todas las sedes.")
     acts = ACTIVIDADES_FASE2
     for i, (t, d) in enumerate(acts, 1):
         with st.container(border=True):
@@ -749,15 +916,22 @@ def fase2():
                       yaxis=dict(autorange="reversed"), plot_bgcolor="#fff")
     st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
     st.markdown(chips(["■ Realizada"], "ok") + chips(["■ Pendiente"]), unsafe_allow_html=True)
+    st.caption("Cada barra es una actividad y su largo, los meses que dura. Las barras que se superponen "
+               "ocurren al mismo tiempo.")
 
     st.subheader("¿Cuántas respuestas necesita el piloto?")
     c1, c2 = st.columns([1, 2])
     margen = c1.slider("Margen de error deseado (± puntos porcentuales)", 3, 12, 7)
     n = round(1.96 ** 2 * 0.25 / (margen / 100) ** 2)
     c2.markdown(f'<div class="card"><p>Respuestas necesarias por grupo (programa × cohorte) para '
-                f'estimar un porcentaje con ±{margen} puntos al 95 %:</p><div class="big">{n:,}</div>'
-                f'<p>Fórmula: n = 1,96² × 0,25 / margen². Supone el caso más exigente (50 %).</p></div>'.replace(",", "."),
+                f'estimar un porcentaje con ±{margen} puntos al 95 %:</p><div class="big">{fmt(n, 0)}</div>'
+                f'<p>Fórmula: n = 1,96² × 0,25 / margen². Supone el caso más exigente (50 %).</p></div>',
                 unsafe_allow_html=True)
+    nota("Cómo interpretarlo:", f"si el piloto encuentra, por ejemplo, que 60 % de un grupo tiene empleo "
+         f"relacionado con su carrera, con {fmt(n, 0)} respuestas se podría decir que el valor real está entre "
+         f"{60 - margen} % y {60 + margen} %. Un margen más pequeño da más precisión, pero exige muchas más "
+         "respuestas: reducir el margen a la mitad multiplica por cuatro las encuestas necesarias. "
+         "<b>Mueva el control</b> para verlo.")
 
 
 # ---------------------------------------------------------------------------
@@ -772,10 +946,6 @@ NOMBRE_COMPARA = {"✓": "✓ Igual o casi igual", "≈": "≈ Recodificable", "
 
 def _lista(txt: str) -> str:
     return "<br>".join(html.escape(x) for x in txt.split("\n"))
-
-
-def _nota(titulo: str, texto: str):
-    st.markdown(f'<div class="simple"><b>{titulo}</b> {texto}</div>', unsafe_allow_html=True)
 
 
 def _q_resumen():
@@ -847,7 +1017,7 @@ def f2_cuestionario():
     with t4:
         _q_traza()
     with t5:
-        _nota("¿Qué es esta lista?", "Preguntas de los estudios actuales que no pasan al núcleo tal como están. "
+        nota("¿Qué es esta lista?", "Preguntas de los estudios actuales que no pasan al núcleo tal como están. "
               "Se cambian por una de tres razones: <b>no se pueden comparar</b> (escalas o rangos distintos), "
               "<b>dan demasiado trabajo</b> (decenas de columnas casi vacías) o <b>exponen datos personales</b> "
               "sin necesidad (documento, nombre de la empresa en texto libre).")
@@ -864,7 +1034,7 @@ def f2_cuestionario():
 
 
 def _q_nucleo():
-    _nota("¿Qué es el núcleo?", "Las preguntas obligatorias, iguales en todas las sedes. Están ordenadas en "
+    nota("¿Qué es el núcleo?", "Las preguntas obligatorias, iguales en todas las sedes. Están ordenadas en "
           "ocho secciones (A a H), del dato más simple (de qué programa se graduó) al más personal (qué le "
           "aportó la Universidad).")
     st.markdown("**La clave: pares «antes / ahora».** Se hace la misma pregunta dos veces, una sobre el momento "
@@ -906,11 +1076,11 @@ def _q_nucleo():
     else:
         secciones = {f"{s[0]} · {s[1]}": s for s in Q.NUCLEO}
         sel = st.radio("Sección", list(secciones), horizontal=True, label_visibility="collapsed")
-        letra, _, nota, _ = secciones[sel]
+        letra, _, nota_sec, _ = secciones[sel]
         para, ejemplo = Q.PARA_QUE[letra]
-        _nota("¿Para qué sirve esta sección?", f"{html.escape(para)}<br><b>Ejemplo de uso:</b> "
+        nota("¿Para qué sirve esta sección?", f"{html.escape(para)}<br><b>Ejemplo de uso:</b> "
               f"<i>{html.escape(ejemplo)}</i>")
-        st.caption(nota)
+        st.caption(nota_sec)
         lista = [p for p in Q.preguntas() if p["seccion"] == letra]
     for p in lista:
         dim, ind, *_ = Q.TRAZA[p["codigo"]]
@@ -924,7 +1094,7 @@ def _q_nucleo():
 
 
 def _q_modulos():
-    _nota("¿Qué es un módulo?", "Un bloque de preguntas extra sobre un tema que no le interesa a todas las "
+    nota("¿Qué es un módulo?", "Un bloque de preguntas extra sobre un tema que no le interesa a todas las "
           "sedes por igual; por ejemplo, una sede con muchos graduados fuera del país usaría M1. Es como un "
           "menú: cada sede elige los que necesita y los pone <b>después</b> del núcleo, sin cambiar su texto. "
           "Así también se pueden comparar las sedes que usen el mismo módulo.")
@@ -938,7 +1108,7 @@ def _q_modulos():
 
 
 def _q_escalas():
-    _nota("¿Qué es una escala y por qué unificarla?", "La escala es el conjunto de opciones de respuesta. Hoy "
+    nota("¿Qué es una escala y por qué unificarla?", "La escala es el conjunto de opciones de respuesta. Hoy "
           "una encuesta pregunta de 1 a 4, otra de 1 a 5 y otra solo Sí/No sobre el mismo tema, y así un "
           "«4» no significa lo mismo en todas. La propuesta usa <b>pocas escalas fijas</b>: cada tipo de "
           "pregunta tiene siempre las mismas opciones.")
@@ -953,14 +1123,14 @@ def _q_escalas():
     st.markdown('<div class="simple"><b>¿Por qué en SMMLV?</b> Los rangos en pesos pierden vigencia con la '
                 "inflación (Percepción usa pesos de 2022). En salarios mínimos, las cohortes y los años se "
                 "comparan entre sí. C03 es retrospectiva y tiene sesgo de recuerdo.</div>", unsafe_allow_html=True)
-    _nota("¿Por qué los códigos 97, 98 y 99?", "No es lo mismo «no sé» que «no quiero responder» o «no me "
+    nota("¿Por qué los códigos 97, 98 y 99?", "No es lo mismo «no sé» que «no quiero responder» o «no me "
           "aplica» (por ejemplo, preguntar por el cargo a quien no trabaja). Si se mezclan con las respuestas "
           "reales, los promedios y porcentajes se distorsionan; con códigos aparte se pueden excluir del "
           "cálculo y, a la vez, contar cuántas personas no respondieron.")
 
 
 def _q_traza():
-    _nota("¿Qué muestra esta pestaña?", "Para cada pregunta del núcleo: a qué dimensión del modelo aporta, qué "
+    nota("¿Qué muestra esta pestaña?", "Para cada pregunta del núcleo: a qué dimensión del modelo aporta, qué "
           "indicador alimenta y si ya existe en alguna de las tres encuestas actuales. Sirve para saber qué "
           "datos históricos se pueden aprovechar y cuáles empiezan desde cero.")
     st.markdown(f"{chips(['✓'], 'ok')} la base ya tiene esa pregunta, igual o casi igual · "
@@ -972,7 +1142,7 @@ def _q_traza():
     en_las_tres = sum(1 for v in Q.TRAZA.values() if all(m != "—" for m in v[2:]))
     nuevas = sum(1 for v in Q.TRAZA.values() if all(m == "—" for m in v[2:]))
     mejor = max(range(3), key=lambda i: usable[i])
-    _nota("Cómo leer el gráfico:", f"la base más cercana al núcleo es <b>{bases[mejor]}</b>, que tiene de "
+    nota("Cómo leer el gráfico:", f"la base más cercana al núcleo es <b>{bases[mejor]}</b>, que tiene de "
           f"alguna forma {usable[mejor]} de las {n} preguntas. Solo <b>{en_las_tres}</b> aparecen en las tres "
           f"bases a la vez, y {nuevas} {'no está' if nuevas == 1 else 'no están'} en ninguna. Por eso hoy "
           "solo una parte pequeña de la información se puede comparar entre las tres encuestas.")
@@ -1011,7 +1181,7 @@ def _q_protocolo():
         with col:
             card(t, d)
     st.subheader("¿A quién se le pregunta cada año?")
-    _nota("La idea:", "cada graduado responde <b>tres veces</b>: al año, a los tres y a los cinco años de "
+    nota("La idea:", "cada graduado responde <b>tres veces</b>: al año, a los tres y a los cinco años de "
           "graduarse. Así se ve cómo evoluciona la misma persona, y cada año se encuesta a tres grupos a la vez.")
     fig = go.Figure()
     colores = [SERIES, GOLD, "#2E7D32"]
@@ -1030,7 +1200,7 @@ def _q_protocolo():
     st.caption("Calendario ilustrativo con tres cohortes. En 2031 (franja amarilla) responden a la vez los "
                "graduados de 2030 (1 año), 2028 (3 años) y 2026 (5 años).")
     st.subheader("Ruta de validación del cuestionario")
-    _nota("¿Por qué validar?", "Antes de usarlo en todas las sedes hay que comprobar que las preguntas se "
+    nota("¿Por qué validar?", "Antes de usarlo en todas las sedes hay que comprobar que las preguntas se "
           "entienden, que no toma demasiado tiempo y que mide lo que dice medir. Son cinco pasos, del más "
           "sencillo al más técnico.")
     tabla_html(pd.DataFrame([
@@ -1057,6 +1227,10 @@ def anexo_fichas():
     encabezado("Anexos", "Fichas técnicas de los indicadores")
     st.markdown("Cada ficha documenta qué mide el indicador, cómo se calcula, de dónde salen los "
                 "datos, qué tan sólida es la evidencia y cuál es su línea base.")
+    nota("¿Qué es una ficha técnica?", "Es como la <b>hoja de vida de un indicador</b>: deja por escrito todo "
+         "lo necesario para que otra persona, en otra sede o en otro año, lo calcule exactamente igual. Si "
+         "tiene poco tiempo, lea tres filas: <b>Pregunta que responde</b>, <b>Línea base</b> (el valor de hoy, "
+         "contra el que se comparará en el futuro) e <b>Interpretación</b>.")
     if DOCX_FICHAS.exists():
         st.download_button("Descargar las 14 fichas (Word)", DOCX_FICHAS.read_bytes(),
                            file_name=DOCX_FICHAS.name, icon=":material/download:")
@@ -1066,6 +1240,7 @@ def anexo_fichas():
     st.markdown(f"### {f['id']} · {f['nombre']}")
     st.markdown(chips([f["dimension"], f["aspecto"], f"Tipo: {f['tipo']}",
                        f"Evidencia {f['evidencia']}: {f['evidencia_nombre']}"]), unsafe_allow_html=True)
+    nota("En pocas palabras:", lectura_pct(IND[sel]["resultados"][0]))
     filas = [("Pregunta que responde", f["pregunta"]), ("Definición", f["definicion"]),
              ("Fórmula", f["formula"]), ("Unidad de medida", f["unidad"]), ("Universo", f["universo"]),
              ("Fuentes", ", ".join(f["fuentes"])),
@@ -1089,9 +1264,13 @@ def anexo_glosario():
                            DOCX_IMPACTO.read_bytes(), file_name=DOCX_IMPACTO.name,
                            icon=":material/download:")
     st.subheader("Límites de esta fase")
+    st.caption("Todo estudio tiene límites. Decirlos con claridad evita que las cifras se usen para "
+               "afirmar más de lo que permiten.")
     for l in CONC["limitaciones"]:
         st.markdown(f"- **{l['titulo']}.** {l['texto']}")
     st.subheader("Glosario")
+    st.caption("Si solo quiere la idea general, lea la columna «En palabras sencillas». Los términos del "
+               "cuestionario común (SMMLV, cohorte, seudonimizado…) están en la pestaña ⑦ de esa página.")
     q = st.text_input("Buscar término")
     g = [x for x in CONC["glosario"] if not q or q.lower() in (x["termino"] + x["definicion"]).lower()]
     tabla_html(pd.DataFrame(g).rename(columns={"termino": "Término", "definicion": "Definición",
